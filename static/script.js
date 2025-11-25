@@ -1,6 +1,6 @@
 /**
  * AI Resume Analyzer - Frontend Application
- * Optimized and Enhanced Version
+ * Optimized and Enhanced Version with Readiness Polling
  */
 
 (function () {
@@ -13,12 +13,15 @@
         MIN_JD_LENGTH: 20,
         ENDPOINTS: {
             UPLOAD: '/upload',
-            MATCH: '/match_jd_resume'
+            MATCH: '/match_jd_resume',
+            READY: '/ready'
         },
         SCROLL_OPTIONS: {
             behavior: 'smooth',
             block: 'nearest'
-        }
+        },
+        READY_POLL_INTERVAL: 2000, // Poll every 2 seconds
+        READY_POLL_RETRY_INTERVAL: 4000 // Retry every 4 seconds on error
     };
 
     // ==================== DOM CACHE ====================
@@ -34,6 +37,9 @@
         error: null,
         fileLabel: null
     };
+
+    // ==================== STATE ====================
+    let isSystemReady = false;
 
     // ==================== INITIALIZATION ====================
     /**
@@ -51,6 +57,10 @@
 
         // Attach event listeners
         attachEventListeners();
+
+        // Start readiness polling
+        setBusyUI(false);
+        pollReady();
 
         console.log('AI Resume Analyzer initialized successfully');
     }
@@ -76,6 +86,52 @@
      */
     function checkBrowserCompatibility() {
         return !!(window.FormData && window.fetch && window.File);
+    }
+
+    // ==================== READINESS POLLING ====================
+    /**
+     * Set UI state based on system readiness
+     */
+    function setBusyUI(ready) {
+        isSystemReady = ready;
+        
+        if (!ready) {
+            DOM.analyzeBtn.disabled = true;
+            DOM.matchBtn.disabled = true;
+            
+            // Show initialization message
+            showError('🔄 System is initializing — please wait...', 'info');
+        } else {
+            DOM.analyzeBtn.disabled = false;
+            DOM.matchBtn.disabled = false;
+            
+            // Clear initialization message
+            hideError();
+        }
+    }
+
+    /**
+     * Poll /ready endpoint until system is ready
+     */
+    async function pollReady() {
+        try {
+            const response = await fetch(CONFIG.ENDPOINTS.READY);
+            const data = await response.json();
+            
+            setBusyUI(data.ready);
+            
+            if (!data.ready) {
+                // Not ready yet, poll again
+                setTimeout(pollReady, CONFIG.READY_POLL_INTERVAL);
+            } else {
+                console.log('✅ System ready!');
+            }
+        } catch (error) {
+            console.error('Ready check failed:', error);
+            setBusyUI(false);
+            // Retry with longer interval on error
+            setTimeout(pollReady, CONFIG.READY_POLL_RETRY_INTERVAL);
+        }
     }
 
     // ==================== EVENT LISTENERS ====================
@@ -164,6 +220,14 @@
 
             const data = await response.json();
 
+            if (response.status === 503) {
+                // System still initializing
+                showError(data.error || 'System initializing — try again shortly.');
+                // Resume polling to check when ready
+                setTimeout(pollReady, CONFIG.READY_POLL_INTERVAL);
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(data.error || `Server error (${response.status})`);
             }
@@ -232,6 +296,14 @@
             });
 
             const data = await response.json();
+
+            if (response.status === 503) {
+                // System still initializing
+                showError(data.error || 'System initializing — try again shortly.');
+                // Resume polling to check when ready
+                setTimeout(pollReady, CONFIG.READY_POLL_INTERVAL);
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || `Server error (${response.status})`);
@@ -418,11 +490,22 @@
     }
 
     /**
-     * Show error message
+     * Show error message with optional type
      */
-    function showError(message) {
-        DOM.error.innerHTML = `<strong>Error:</strong> ${escapeHtml(message)}`;
+    function showError(message, type = 'error') {
+        const icon = type === 'info' ? '<i class="fas fa-info-circle"></i>' : '<strong>Error:</strong>';
+        DOM.error.innerHTML = `${icon} ${escapeHtml(message)}`;
         DOM.error.style.display = 'block';
+        
+        // Add class for info styling if needed
+        if (type === 'info') {
+            DOM.error.style.background = 'rgba(6, 182, 212, 0.15)';
+            DOM.error.style.borderLeftColor = '#06b6d4';
+        } else {
+            DOM.error.style.background = 'rgba(239, 68, 68, 0.15)';
+            DOM.error.style.borderLeftColor = '#ef4444';
+        }
+        
         scrollToElement(DOM.error);
     }
 
