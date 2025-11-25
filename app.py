@@ -26,6 +26,10 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'txt'}
 
+@app.route("/health")
+def health():
+    return "ok", 200
+
 # Constants
 MAX_TEXT_LENGTH = 5000
 MAX_PDF_PAGES = 5
