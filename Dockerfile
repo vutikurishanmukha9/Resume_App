@@ -16,7 +16,11 @@ COPY . .
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-ENV PORT=8080
+# DO NOT set a fixed PORT here — Render provides $PORT at runtime
+# ENV PORT=8080   <-- remove this line
+
+# EXPOSE is optional for Render; leaving it is harmless but not required
 EXPOSE 8080
 
-CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info"]
+# Bind to the runtime $PORT. Use 1 worker while debugging to avoid OOM/worker crashes.
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info"]
