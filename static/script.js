@@ -3,7 +3,7 @@
  * Optimized and Enhanced Version
  */
 
-(function() {
+(function () {
     'use strict';
 
     // ==================== CONFIGURATION ====================
@@ -42,7 +42,7 @@
     function init() {
         // Cache DOM elements
         cacheDOMElements();
-        
+
         // Check browser compatibility
         if (!checkBrowserCompatibility()) {
             showError('Your browser does not support required features. Please use a modern browser.');
@@ -51,8 +51,8 @@
 
         // Attach event listeners
         attachEventListeners();
-        
-        console.log('✅ AI Resume Analyzer initialized successfully');
+
+        console.log('AI Resume Analyzer initialized successfully');
     }
 
     /**
@@ -85,19 +85,19 @@
     function attachEventListeners() {
         // File input change
         DOM.fileInput.addEventListener('change', handleFileChange);
-        
+
         // Form submission for analysis
         DOM.uploadForm.addEventListener('submit', handleAnalyze);
-        
+
         // JD match button
         DOM.matchBtn.addEventListener('click', handleJDMatch);
-        
+
         // Drag and drop
         setupDragAndDrop();
-        
+
         // Keyboard shortcuts
         setupKeyboardShortcuts();
-        
+
         // File label keyboard accessibility
         DOM.fileLabel.addEventListener('keydown', handleFileLabelKeydown);
     }
@@ -295,7 +295,7 @@
         DOM.fileLabel.classList.remove('drag-over');
 
         const files = e.dataTransfer.files;
-        
+
         if (files.length > 0) {
             DOM.fileInput.files = files;
             const event = new Event('change', { bubbles: true });
@@ -308,7 +308,7 @@
      * Setup keyboard shortcuts
      */
     function setupKeyboardShortcuts() {
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             // Ctrl/Cmd + Enter to analyze
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 if (!DOM.analyzeBtn.disabled && DOM.fileInput.files.length > 0) {
@@ -316,7 +316,7 @@
                     DOM.uploadForm.dispatchEvent(new Event('submit'));
                 }
             }
-            
+
             // Escape to reset
             if (e.key === 'Escape') {
                 resetForm();
@@ -397,7 +397,7 @@
      * Display file info
      */
     function displayFileInfo(file) {
-        DOM.fileName.textContent = `📎 ${file.name} (${formatFileSize(file.size)})`;
+        DOM.fileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
         DOM.fileName.classList.add('active');
     }
 
@@ -421,7 +421,7 @@
      * Show error message
      */
     function showError(message) {
-        DOM.error.innerHTML = `<strong>⚠️ Error:</strong> ${escapeHtml(message)}`;
+        DOM.error.innerHTML = `<strong>Error:</strong> ${escapeHtml(message)}`;
         DOM.error.style.display = 'block';
         scrollToElement(DOM.error);
     }
@@ -466,9 +466,9 @@
         }
 
         let html = `
-            <h2>📋 Analysis Results</h2>
+            <h2>Analysis Results</h2>
             <div class="result-card">
-                <h3>🎯 Predicted Job Category</h3>
+                <h3>Predicted Job Category</h3>
                 <div class="job-badge">${escapeHtml(data.predicted_job)}</div>
             </div>
             
@@ -505,9 +505,9 @@
             </div>
             
             <div class="result-card">
-                <h3>💰 Estimated Salary</h3>
+                <h3>Estimated Salary</h3>
                 <div class="salary-display">
-                    <span class="salary-icon">💵</span>
+                    <span class="salary-icon"></span>
                     <span class="salary-amount">${escapeHtml(data.salary)}</span>
                 </div>
             </div>
@@ -529,22 +529,22 @@
 
         const percentage = data.match_percentage;
         const components = data.component_scores || {};
-        
+
         let matchLevel = '';
         let matchClass = '';
 
         // Determine match level
         if (percentage >= 80) {
-            matchLevel = 'Excellent Match! 🎉';
+            matchLevel = 'Excellent Match!';
             matchClass = 'excellent';
         } else if (percentage >= 60) {
-            matchLevel = 'Good Match! 👍';
+            matchLevel = 'Good Match!';
             matchClass = 'good';
         } else if (percentage >= 40) {
-            matchLevel = 'Moderate Match 👌';
+            matchLevel = 'Moderate Match';
             matchClass = 'moderate';
         } else {
-            matchLevel = 'Low Match 🤔';
+            matchLevel = 'Low Match';
             matchClass = 'low';
         }
 
@@ -566,7 +566,7 @@
         if (Object.keys(components).length > 0) {
             html += `
                 <div class="result-card">
-                    <h3>🔍 Detailed Score Breakdown</h3>
+                    <h3>Detailed Score Breakdown</h3>
                     <div class="component-scores">
             `;
 
@@ -595,7 +595,7 @@
             html += `
                     </div>
                     <p class="breakdown-note">
-                        <small>💡 The final score is calculated using weighted average: 
+                        <small>The final score is calculated using weighted average: 
                         Semantic (40%) + Keywords (30%) + Skills (20%) + Context (10%)</small>
                     </p>
                 </div>

@@ -78,13 +78,13 @@ class ModelManager:
             if not os.path.exists("job_classifier.pkl"):
                 raise FileNotFoundError("job_classifier.pkl not found")
             self.resume_classifier = joblib.load("job_classifier.pkl")
-            logger.info("✅ Resume classifier loaded")
+            logger.info("Resume classifier loaded")
 
             # Load salary predictor
             if not os.path.exists("salary_predictor.pkl"):
                 raise FileNotFoundError("salary_predictor.pkl not found")
             self.salary_model = joblib.load("salary_predictor.pkl")
-            logger.info("✅ Salary predictor loaded")
+            logger.info("Salary predictor loaded")
 
             # Load job dataset
             if not os.path.exists("job_title_des.csv"):
@@ -98,18 +98,18 @@ class ModelManager:
             
             # Remove any rows with missing critical data
             self.job_df = self.job_df.dropna(subset=required_columns)
-            logger.info(f"✅ Job dataset loaded with {len(self.job_df)} entries")
+            logger.info(f"Job dataset loaded with {len(self.job_df)} entries")
 
             # Load embedding model
             self.embed_model = SentenceTransformer('all-MiniLM-L6-v2')
             self.embed_model.max_seq_length = 256
-            logger.info("✅ Sentence Transformer model loaded")
+            logger.info("Sentence Transformer model loaded")
 
             # Precompute embeddings
             self.precompute_job_embeddings()
 
             self._models_loaded = True
-            logger.info("✅ All models successfully initialized")
+            logger.info("All models successfully initialized")
 
         except FileNotFoundError as e:
             logger.error(f"Required file missing: {e}")
@@ -130,7 +130,7 @@ class ModelManager:
                     
                     # Validate cache matches current dataset
                     if len(self.job_embeddings) == len(self.job_df):
-                        logger.info("✅ Loaded cached job embeddings")
+                        logger.info("Loaded cached job embeddings")
                         return
                     else:
                         logger.warning("Cache size mismatch, recomputing embeddings...")
@@ -154,7 +154,7 @@ class ModelManager:
             # Cache the embeddings
             with open(EMBEDDING_CACHE_FILE, 'wb') as f:
                 pickle.dump(self.job_embeddings, f)
-            logger.info("✅ Job embeddings computed and cached")
+            logger.info("Job embeddings computed and cached")
             
         except Exception as e:
             logger.error(f"Failed to compute embeddings: {e}")
@@ -628,11 +628,11 @@ if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     try:
-        logger.info("🚀 Initializing AI Resume Analyzer...")
+        logger.info("Initializing AI Resume Analyzer...")
         model_manager.load_models()
-        logger.info("✅ System ready!")
+        logger.info("System ready!")
     except Exception as e:
-        logger.error(f"❌ Startup failed: {e}")
+        logger.error(f"Startup failed: {e}")
         logger.error(traceback.format_exc())
         exit(1)
 
@@ -806,13 +806,13 @@ class ModelManager:
             if not os.path.exists("job_classifier.pkl"):
                 raise FileNotFoundError("job_classifier.pkl not found")
             self.resume_classifier = joblib.load("job_classifier.pkl")
-            logger.info("✅ Resume classifier loaded")
+            logger.info("Resume classifier loaded")
 
             # Load salary predictor
             if not os.path.exists("salary_predictor.pkl"):
                 raise FileNotFoundError("salary_predictor.pkl not found")
             self.salary_model = joblib.load("salary_predictor.pkl")
-            logger.info("✅ Salary predictor loaded")
+            logger.info("Salary predictor loaded")
 
             # Load job dataset
             if not os.path.exists("job_title_des.csv"):
@@ -836,18 +836,18 @@ class ModelManager:
             if len(self.job_df) == 0:
                 raise ValueError("No valid job entries found in dataset")
                 
-            logger.info(f"✅ Job dataset loaded with {len(self.job_df)} entries")
+            logger.info(f"Job dataset loaded with {len(self.job_df)} entries")
 
             # Load embedding model (Dynamic choice)
             self.embed_model = load_embed_model(quick_mode)
-            logger.info("✅ Sentence Transformer model loaded")
+            logger.info("Sentence Transformer model loaded")
 
             # Precompute embeddings
             self.precompute_job_embeddings()
 
             self._models_loaded = True
             elapsed = time.time() - start_time
-            logger.info(f"✅ All models successfully initialized in {elapsed:.2f}s")
+            logger.info(f"All models successfully initialized in {elapsed:.2f}s")
 
         except FileNotFoundError as e:
             logger.error(f"Required file missing: {e}")
@@ -872,7 +872,7 @@ class ModelManager:
                     with open(EMBEDDING_CACHE_FILE, 'rb') as f:
                         self.job_embeddings = pickle.load(f)
                     if len(self.job_embeddings) == len(self.job_df):
-                        logger.info("✅ Loaded cached job embeddings (validated)")
+                        logger.info("Loaded cached job embeddings (validated)")
                         return
                     else:
                         logger.warning("Cache size mismatch, recomputing embeddings...")
@@ -900,7 +900,7 @@ class ModelManager:
                 pickle.dump(self.job_embeddings, f)
             self._save_hash(current_hash)
             
-            logger.info("✅ Job embeddings computed and cached")
+            logger.info("Job embeddings computed and cached")
 
         except ValueError as e:
             logger.error(f"Validation error: {e}")
@@ -1193,11 +1193,11 @@ if __name__ == '__main__':
     try:
         mode = os.getenv("MODEL_MODE", "fast").lower()
         quick_mode = mode == "fast"
-        logger.info(f"🚀 Initializing AI Resume Analyzer in {'FAST' if quick_mode else 'ACCURATE'} mode...")
+        logger.info(f"Initializing AI Resume Analyzer in {'FAST' if quick_mode else 'ACCURATE'} mode...")
         model_manager.load_models(quick_mode)
-        logger.info("✅ System ready!")
+        logger.info("System ready!")
     except Exception as e:
-        logger.error(f"❌ Startup failed: {e}")
+        logger.error(f"Startup failed: {e}")
         logger.error(traceback.format_exc())
         exit(1)
     app.run(debug=True, host='0.0.0.0', port=5000)'''

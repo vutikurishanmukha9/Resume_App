@@ -1,7 +1,3 @@
-That's an excellent, detailed project description\! I'll generate a complete and well-structured **README.md** file for your GitHub repository based on the information you provided, including proper Markdown and correctly formatted Bash code blocks.
-
------
-
 # AI Resume Analyzer
 
 An AI-powered web application that **analyzes resumes**, **matches them with job descriptions**, and **predicts the best-fit job titles and estimated salaries** all in one intuitive interface.
@@ -12,15 +8,15 @@ An AI-powered web application that **analyzes resumes**, **matches them with job
 
 This application leverages advanced NLP to provide comprehensive insights into job fit and career potential.
 
-  * ✅ **Resume Upload** — Supports PDF format for easy resume submission.
-  * ✅ **Job Description Analysis** — Input any job description (JD) via paste or upload.
+  * ✅ **Resume Upload** — Supports **PDF and TXT** formats for easy resume submission.
+  * ✅ **Job Description Analysis** — Input any job description (JD) to check compatibility.
   * ✅ **AI-Powered Matching** — Uses state-of-the-art NLP models for core predictions:
       * **Predicted Job Title** that best fits your profile.
       * **Skill Match Percentage** between your resume and the JD.
       * **Estimated Salary Range** for the predicted role.
   * ✅ **Smart Suggestions** — Highlights **missing keywords** and provides actionable improvements to optimize your resume for **ATS (Applicant Tracking Systems)**.
-  * ✅ **Interactive Web App** — Built for a seamless user experience using **Flask** and modern frontend technologies.
-  * ✅ **Real-Time Insights** — Receive instantaneous analysis and results upon submission.
+  * ✅ **Modern UI/UX** — Features a stunning **Dark Theme** with **Glassmorphism** effects, smooth animations, and a responsive design.
+  * ✅ **Real-Time Insights** — Receive instantaneous analysis and results upon submission without page reloads.
 
 -----
 
@@ -29,9 +25,9 @@ This application leverages advanced NLP to provide comprehensive insights into j
 | Category | Technologies | Description |
 | :--- | :--- | :--- |
 | **Backend** | **Flask (Python)** | Robust and lightweight web framework for the backend. |
-| **Frontend** | HTML, CSS, JavaScript | Interactive and responsive user interface. |
-| **AI/NLP Models** | **Sentence Transformers, Scikit-learn, Joblib** | Core components for text embedding, similarity, and job title prediction. |
-| **Libraries Used** | PyPDF2, NumPy, Pandas, Pickle | PDF parsing, data manipulation, and model serialization. |
+| **Frontend** | HTML5, CSS3, JavaScript | Modern, responsive UI with Glassmorphism and animations. |
+| **AI/NLP Models** | **Sentence Transformers, Scikit-learn** | Core components for text embedding, similarity, and job title prediction. |
+| **Libraries Used** | PyPDF2, NumPy, Pandas, Joblib | PDF parsing, data manipulation, and model serialization. |
 | **Deployment** | Render / Railway / AWS | Recommended platforms for production deployment. |
 
 -----
@@ -97,17 +93,17 @@ Visit 👉 http://127.0.0.1:5000/
 AI-Resume-Analyzer/
 │
 ├── app.py                      # Main Flask backend file
-├── model/
-│   ├── job_title_model.pkl     # Trained Machine Learning model for job prediction
-│   └── vectorizer.pkl          # Vectorizer (TF-IDF / Sentence transformer)
+├── config.py                   # Configuration settings
+├── job_classifier.pkl          # Trained model for job prediction
+├── salary_predictor.pkl        # Trained model for salary estimation
+├── job_title_des.csv           # Dataset for job titles and descriptions
 │
 ├── static/
-│   ├── style.css               # Frontend styling
-│   └── preview.png             # Application preview image
+│   ├── style.css               # Modern Dark Theme Styling
+│   └── script.js               # Frontend logic and API handling
 │
 ├── templates/
-│   ├── index.html              # Homepage user interface
-│   └── result.html             # Result display page
+│   └── index.html              # Single-page application interface
 │
 ├── uploads/                    # Temporary storage for uploaded resumes
 ├── requirements.txt
@@ -118,8 +114,8 @@ AI-Resume-Analyzer/
 
 ## 🧩 How It Works
 
-1.  **Input:** User uploads a **resume (PDF)** and provides a **job description (JD)**.
-2.  **Extraction:** Text is extracted from the PDF using **PyPDF2**.
+1.  **Input:** User uploads a **resume (PDF or TXT)** and optionally provides a **job description (JD)**.
+2.  **Extraction:** Text is extracted from the file using **PyPDF2** (for PDFs) or standard text reading.
 3.  **Embedding:** The **SentenceTransformer** model converts the resume and JD text into numerical vector **embeddings**.
 4.  **Matching:** **Cosine similarity** is calculated between the embeddings to determine the **Skill Match Percentage**.
 5.  **Prediction:** A trained **Machine Learning model** predicts the best-fit **Job Title**.
@@ -138,7 +134,7 @@ AI-Resume-Analyzer/
 
 ## 💡 Future Enhancements
 
-We are always looking to improve\! Potential future features include:
+We are always looking to improve! Potential future features include:
 
   * 🗣️ Voice Resume Input for accessibility.
   * 🧬 Integration with large language models (OpenAI / Gemini) for detailed resume rewrites.
@@ -170,6 +166,3 @@ A special thanks to the following for their contributions and resources:
   * **Sentence Transformers Team** for the powerful NLP models.
   * **Flask Community** for the robust and versatile web framework.
   * **OpenAI** for inspiration on AI-based resume screening solutions.
-
------
-
