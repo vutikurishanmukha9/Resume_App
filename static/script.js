@@ -462,7 +462,7 @@
      * Display analysis results
      */
     function displayResults(data) {
-        if (!data || !data.predicted_job || !data.matches || !data.salary) {
+        if (!data || !data.predicted_job || !data.matches) {
             showError('Invalid response from server. Please try again.');
             return;
         }
@@ -505,82 +505,7 @@
         html += `
                 </ul>
             </div>
-            
-            <div class="result-card">
-                <h3> Estimated Salary</h3>
-                <div class="salary-display">
-                    <span class="salary-icon"></span>
-                    <span class="salary-amount">${escapeHtml(data.salary)}</span>
-                </div>
         `;
-
-        // Add salary details if available
-        if (data.salary_details) {
-            const details = data.salary_details;
-            const confidence = details.confidence || 0;
-            const confidencePercent = (confidence * 100).toFixed(0);
-
-            let confidenceClass = 'low';
-            let confidenceLabel = 'Low';
-            if (confidence >= 0.8) {
-                confidenceClass = 'high';
-                confidenceLabel = 'High';
-            } else if (confidence >= 0.5) {
-                confidenceClass = 'medium';
-                confidenceLabel = 'Medium';
-            }
-
-            html += `
-                <div class="salary-details">
-                    <div class="confidence-indicator">
-                        <span class="confidence-label">Confidence:</span>
-                        <span class="confidence-badge ${confidenceClass}">${confidenceLabel} (${confidencePercent}%)</span>
-                    </div>
-                    <div class="confidence-bar">
-                        <div class="confidence-fill ${confidenceClass}" style="width: ${confidencePercent}%"></div>
-                    </div>
-            `;
-
-            // Add feature breakdown
-            if (details.features) {
-                const features = details.features;
-                html += `
-                    <div class="features-breakdown">
-                        <h4> Extracted Features:</h4>
-                        <div class="feature-grid">
-                            <div class="feature-item">
-                                <span class="feature-icon"></span>
-                                <span class="feature-label">Experience:</span>
-                                <span class="feature-value">${features.years_experience} years</span>
-                            </div>
-                            <div class="feature-item">
-                                <span class="feature-icon"></span>
-                                <span class="feature-label">Education:</span>
-                                <span class="feature-value">${getEducationLabel(features.education_level)}</span>
-                            </div>
-                            <div class="feature-item">
-                                <span class="feature-icon">⭐</span>
-                                <span class="feature-label">Seniority:</span>
-                                <span class="feature-value">${getSeniorityLabel(features.seniority_level)}</span>
-                            </div>
-                            <div class="feature-item">
-                                <span class="feature-icon">️</span>
-                                <span class="feature-label">Skills Count:</span>
-                                <span class="feature-value">${features.skills_count}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (details.note) {
-                html += `<p class="salary-note"><small>${escapeHtml(details.note)}</small></p>`;
-            }
-
-            html += `</div>`;
-        }
-
-        html += `</div>`;
 
         DOM.result.innerHTML = html;
         DOM.result.style.display = 'block';
