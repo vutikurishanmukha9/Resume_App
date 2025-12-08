@@ -23,4 +23,4 @@ USER appuser
 EXPOSE 8080
 
 # Bind to the runtime $PORT. Use 1 worker while debugging to avoid OOM/worker crashes.
-CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info"]
+CMD ["sh", "-c", "gunicorn run:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info"]
