@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import joblib
 import numpy as np
 import pandas as pd
@@ -55,6 +56,9 @@ app = Flask(__name__,
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'txt'}
+
+# Enable CORS for split deployment (Vercel frontend + Render backend)
+CORS(app)
 
 @app.route("/health")
 def health():
