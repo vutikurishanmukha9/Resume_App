@@ -49,6 +49,11 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'txt'}
 def health():
     return "ok", 200
 
+@app.route("/")
+def index():
+    """Serve the main application page"""
+    return render_template("index.html")
+
 # Constants
 MAX_TEXT_LENGTH = 5000
 MAX_PDF_PAGES = 5
