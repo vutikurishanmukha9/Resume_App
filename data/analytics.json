@@ -1,0 +1,116 @@
+{
+  "analyses": [
+    {
+      "timestamp": "2025-11-29T16:55:04.473492",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707667,
+        "confidence": 0.75
+      }
+    },
+    {
+      "timestamp": "2025-11-29T19:42:21.068731",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.85,
+        "component_scores": {
+          "semantic": 62.18,
+          "keyword": 24.38,
+          "skills": 77.78,
+          "context": 41.13
+        }
+      }
+    },
+    {
+      "timestamp": "2025-11-29T19:53:39.906158",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707667,
+        "confidence": 0.75
+      }
+    },
+    {
+      "timestamp": "2025-12-02T18:19:53.202983",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 40.31,
+        "component_scores": {
+          "semantic": 45.44,
+          "keyword": 20.91,
+          "skills": 62.5,
+          "context": 33.56
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-02T18:23:14.813822",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 40.31,
+        "component_scores": {
+          "semantic": 45.44,
+          "keyword": 20.91,
+          "skills": 62.5,
+          "context": 33.56
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-02T18:24:01.853612",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 706506,
+        "confidence": 0.75
+      }
+    },
+    {
+      "timestamp": "2025-12-03T12:31:28.981781",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 35.23,
+        "component_scores": {
+          "semantic": 39.4,
+          "keyword": 20.08,
+          "skills": 50.0,
+          "context": 34.48
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-06T11:06:55.115008",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 712314,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2025-12-07T18:16:44.704846",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 712314,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2025-12-07T18:19:28.800312",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 712314,
+        "confidence": 1.0
+      }
+    }
+  ],
+  "summary": {
+    "total_uploads": 6,
+    "total_matches": 4,
+    "avg_match_score": 41.925,
+    "last_updated": "2025-12-07T18:19:28.801284"
+  }
+}

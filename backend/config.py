@@ -43,4 +43,4 @@ MATCHING_WEIGHTS = {
 }
 
 # Analytics
-ANALYTICS_FILE = BASE_DIR / "analytics.json"
+ANALYTICS_FILE = DATA_DIR / "analytics.json"
