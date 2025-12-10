@@ -13,7 +13,8 @@
         MIN_JD_LENGTH: 20,
         ENDPOINTS: {
             UPLOAD: '/upload',
-            MATCH: '/match_jd_resume'
+            MATCH: '/match_jd_resume',
+            ATS_SCORE: '/ats_score'
         },
         SCROLL_OPTIONS: {
             behavior: 'smooth',
@@ -31,15 +32,54 @@
         jdText: null,
         result: null,
         jdMatchResult: null,
+        atsResult: null,
+        atsBtn: null,
+        atsModeToggle: null,
         error: null,
-        fileLabel: null
+        fileLabel: null,
+        themeToggle: null
     };
+
+    // ==================== THEME MANAGEMENT ====================
+    /**
+     * Initialize theme from localStorage or system preference
+     */
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (!systemPrefersDark) {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        // Default is dark (no attribute needed as :root is dark)
+    }
+
+    /**
+     * Toggle between light and dark theme
+     */
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        if (newTheme === 'dark') {
+            document.documentElement.removeAttribute('data-theme');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        localStorage.setItem('theme', newTheme);
+    }
 
     // ==================== INITIALIZATION ====================
     /**
      * Initialize application when DOM is ready
      */
     function init() {
+        // Initialize theme first (before anything renders)
+        initTheme();
+
         // Cache DOM elements
         cacheDOMElements();
 
@@ -51,6 +91,11 @@
 
         // Attach event listeners
         attachEventListeners();
+
+        // Theme toggle listener
+        if (DOM.themeToggle) {
+            DOM.themeToggle.addEventListener('click', toggleTheme);
+        }
 
         console.log('AI Resume Analyzer initialized successfully');
     }
@@ -67,8 +112,12 @@
         DOM.jdText = document.getElementById('jdText');
         DOM.result = document.getElementById('result');
         DOM.jdMatchResult = document.getElementById('jdMatchResult');
+        DOM.atsResult = document.getElementById('atsResult');
+        DOM.atsBtn = document.getElementById('atsBtn');
+        DOM.atsModeToggle = document.getElementById('atsModeToggle');
         DOM.error = document.getElementById('error');
         DOM.fileLabel = document.querySelector('.file-label');
+        DOM.themeToggle = document.getElementById('themeToggle');
     }
 
     /**
@@ -91,6 +140,20 @@
 
         // JD match button
         DOM.matchBtn.addEventListener('click', handleJDMatch);
+
+        // ATS Score button
+        if (DOM.atsBtn) {
+            DOM.atsBtn.addEventListener('click', handleATSScore);
+        }
+
+        // Show ATS mode toggle when JD is provided
+        if (DOM.jdText) {
+            DOM.jdText.addEventListener('input', function () {
+                if (DOM.atsModeToggle) {
+                    DOM.atsModeToggle.style.display = this.value.trim().length > 0 ? 'flex' : 'none';
+                }
+            });
+        }
 
         // Drag and drop
         setupDragAndDrop();
@@ -252,6 +315,275 @@
     }
 
     /**
+     * Handle ATS Score calculation
+     */
+    async function handleATSScore() {
+        const file = DOM.fileInput.files[0];
+        const jdText = DOM.jdText.value.trim();
+
+        // Validate inputs
+        if (!file) {
+            showError('Please select a resume file first.');
+            DOM.fileInput.focus();
+            return;
+        }
+
+        if (!jdText) {
+            showError('Please paste a Job Description to calculate ATS score.');
+            DOM.jdText.focus();
+            return;
+        }
+
+        if (jdText.length < CONFIG.MIN_JD_LENGTH) {
+            showError(`Job Description is too short. Please provide at least ${CONFIG.MIN_JD_LENGTH} characters.`);
+            DOM.jdText.focus();
+            return;
+        }
+
+        const validation = validateFile(file);
+        if (!validation.valid) {
+            showError(validation.error);
+            return;
+        }
+
+        // Clear previous results
+        resetResults();
+
+        // Get selected mode
+        const modeInput = document.querySelector('input[name="atsMode"]:checked');
+        const mode = modeInput ? modeInput.value : 'deep';
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('resume', file);
+        formData.append('jd_text', jdText);
+        formData.append('mode', mode);
+
+        // Show loading state
+        setButtonLoading(DOM.atsBtn, true);
+
+        try {
+            const response = await fetch(CONFIG.ENDPOINTS.ATS_SCORE, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `Server error (${response.status})`);
+            }
+
+            if (data.success) {
+                displayATSResult(data);
+            } else {
+                showError(data.error || 'Failed to calculate ATS score. Please try again.');
+            }
+
+        } catch (error) {
+            console.error('ATS Score error:', error);
+            handleFetchError(error, 'ats');
+        } finally {
+            setButtonLoading(DOM.atsBtn, false);
+        }
+    }
+
+    /**
+     * Display ATS Score results
+     */
+    function displayATSResult(data) {
+        if (!data || typeof data.ats_score !== 'number') {
+            showError('Invalid response from server. Please try again.');
+            return;
+        }
+
+        const score = data.ats_score;
+        const interpretation = data.interpretation || {};
+        const subScores = data.sub_scores || {};
+        const matchedKeywords = data.matched_keywords || [];
+        const missingKeywords = data.missing_keywords || {};
+        const achievementsFound = data.achievements_found || [];
+        const suggestions = data.suggestions || [];
+        const mode = data.mode || 'deep';
+
+        // Determine score color
+        let scoreColor = '';
+        if (score >= 85) scoreColor = 'excellent';
+        else if (score >= 70) scoreColor = 'good';
+        else if (score >= 50) scoreColor = 'fair';
+        else scoreColor = 'poor';
+
+        let html = `
+            <h2><i class="fas fa-clipboard-check"></i> ATS Score Analysis</h2>
+            <div class="ats-mode-badge ${mode}">${mode === 'deep' ? 'Deep Analysis' : 'Quick Scan'}</div>
+            
+            <!-- Main Score Card -->
+            <div class="ats-score-card ${scoreColor}">
+                <div class="score-circle">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="score-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="score-fill" cx="50" cy="50" r="45" 
+                            stroke-dasharray="${score * 2.83} 283"
+                            stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="score-value">${score}</div>
+                </div>
+                <div class="score-details">
+                    <div class="score-badge ${scoreColor}">${escapeHtml(interpretation.badge || 'Score')}</div>
+                    <div class="score-message">${escapeHtml(interpretation.message || '')}</div>
+                </div>
+            </div>
+        `;
+
+        // Sub-scores breakdown (only in deep mode)
+        if (mode === 'deep' && Object.keys(subScores).length > 0) {
+            html += `
+                <div class="result-card">
+                    <h3><i class="fas fa-chart-bar"></i> Score Breakdown</h3>
+                    <div class="sub-scores">
+            `;
+
+            const subScoreLabels = {
+                'skill_match': { label: 'Skill Match', icon: 'fa-cogs', weight: '40%' },
+                'title_match': { label: 'Title Match', icon: 'fa-user-tie', weight: '20%' },
+                'experience': { label: 'Experience', icon: 'fa-briefcase', weight: '15%' },
+                'achievement': { label: 'Achievements', icon: 'fa-trophy', weight: '10%' },
+                'education': { label: 'Education', icon: 'fa-graduation-cap', weight: '10%' },
+                'formatting_penalty': { label: 'Format Penalty', icon: 'fa-exclamation-triangle', weight: '-5%' }
+            };
+
+            for (const [key, value] of Object.entries(subScores)) {
+                const config = subScoreLabels[key] || { label: key, icon: 'fa-check', weight: '' };
+                const isPenalty = key === 'formatting_penalty';
+                const displayValue = isPenalty ? `-${value}` : value;
+
+                html += `
+                    <div class="sub-score-item ${isPenalty ? 'penalty' : ''}">
+                        <div class="sub-score-header">
+                            <span class="sub-score-label">
+                                <i class="fas ${config.icon}"></i> ${config.label}
+                            </span>
+                            <span class="sub-score-value">${displayValue}%</span>
+                        </div>
+                        <div class="sub-score-bar">
+                            <div class="sub-score-fill ${isPenalty ? 'penalty' : ''}" 
+                                style="width: ${Math.abs(value)}%"></div>
+                        </div>
+                        <div class="sub-score-weight">${config.weight}</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        // Matched Keywords
+        if (matchedKeywords.length > 0) {
+            html += `
+                <div class="result-card">
+                    <h3><i class="fas fa-check-circle"></i> Matched Keywords (${matchedKeywords.length})</h3>
+                    <div class="keywords-list matched">
+            `;
+
+            matchedKeywords.forEach(kw => {
+                const keyword = typeof kw === 'object' ? kw.keyword : kw;
+                const importance = typeof kw === 'object' ? kw.importance : 'standard';
+                html += `<span class="keyword-badge matched ${importance}">${escapeHtml(keyword)}</span>`;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        // Missing Keywords
+        if (missingKeywords.critical?.length || missingKeywords.important?.length || missingKeywords.optional?.length) {
+            html += `
+                <div class="result-card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Missing Keywords</h3>
+                    <p class="section-description">Add these keywords to improve your ATS score:</p>
+            `;
+
+            if (missingKeywords.critical?.length > 0) {
+                html += `
+                    <div class="keywords-section">
+                        <h4 class="keywords-title critical"><i class="fas fa-fire"></i> Critical</h4>
+                        <div class="keywords-list">
+                            ${missingKeywords.critical.map(kw => `
+                                <span class="keyword-badge critical">${escapeHtml(kw)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (missingKeywords.important?.length > 0) {
+                html += `
+                    <div class="keywords-section">
+                        <h4 class="keywords-title important"><i class="fas fa-star"></i> Important</h4>
+                        <div class="keywords-list">
+                            ${missingKeywords.important.map(kw => `
+                                <span class="keyword-badge important">${escapeHtml(kw)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (missingKeywords.optional?.length > 0) {
+                html += `
+                    <div class="keywords-section">
+                        <h4 class="keywords-title optional"><i class="fas fa-plus-circle"></i> Optional</h4>
+                        <div class="keywords-list">
+                            ${missingKeywords.optional.map(kw => `
+                                <span class="keyword-badge optional">${escapeHtml(kw)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+        }
+
+        // Achievements Found
+        if (achievementsFound.length > 0) {
+            html += `
+                <div class="result-card">
+                    <h3><i class="fas fa-trophy"></i> Achievements Detected (${achievementsFound.length})</h3>
+                    <ul class="achievements-list">
+                        ${achievementsFound.map(achievement => `
+                            <li><i class="fas fa-check"></i> ${escapeHtml(achievement)}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Suggestions
+        if (suggestions.length > 0) {
+            html += `
+                <div class="result-card suggestions-card">
+                    <h3><i class="fas fa-lightbulb"></i> Improvement Suggestions</h3>
+                    <ul class="suggestions-list">
+                        ${suggestions.map(suggestion => `
+                            <li><i class="fas fa-arrow-right"></i> ${escapeHtml(suggestion)}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        DOM.atsResult.innerHTML = html;
+        DOM.atsResult.style.display = 'block';
+        scrollToElement(DOM.atsResult);
+    }
+
+    /**
      * Handle file label keyboard interaction
      */
     function handleFileLabelKeydown(e) {
@@ -381,6 +713,10 @@
         DOM.result.innerHTML = '';
         DOM.jdMatchResult.style.display = 'none';
         DOM.jdMatchResult.innerHTML = '';
+        if (DOM.atsResult) {
+            DOM.atsResult.style.display = 'none';
+            DOM.atsResult.innerHTML = '';
+        }
         hideError();
     }
 

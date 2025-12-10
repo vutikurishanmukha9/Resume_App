@@ -18,6 +18,11 @@
 
     <title>AI Resume Analyzer - Smart Job Matching & Salary Prediction</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +50,12 @@
 
     <div class="container">
         <header>
+            <!-- Theme Toggle Button -->
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark mode">
+                <i class="fas fa-sun" id="sunIcon"></i>
+                <i class="fas fa-moon" id="moonIcon"></i>
+            </button>
+
             <h1><i class="fas fa-robot"></i> AI Resume Analyzer</h1>
             <p class="subtitle">
                 Upload your resume to predict your best-fit job, estimated salary, and check how well it matches a Job
@@ -64,7 +75,7 @@
                             <i class="fas fa-cloud-upload-alt file-icon"></i>
                             <span class="file-text">
                                 <strong>Drop your resume here</strong>
-                                <small>or click to browse (PDF, TXT)</small>
+                                <small>or click to browse (PDF, TXT, Word-Doc)</small>
                             </span>
                         </label>
                         <div id="fileName" class="file-name" role="status" aria-live="polite"></div>
@@ -100,6 +111,29 @@
                                 Checking...
                             </span>
                         </button>
+
+                        <button type="button" id="atsBtn" class="ats-btn" aria-label="Calculate ATS Score">
+                            <span class="btn-text"><i class="fas fa-clipboard-check"></i> ATS Score</span>
+                            <span class="btn-loader" style="display: none;" aria-hidden="true">
+                                <span class="spinner"></span>
+                                Scoring...
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- ATS Analysis Mode Toggle -->
+                    <div class="ats-mode-toggle" id="atsModeToggle" style="display: none;">
+                        <label class="mode-label">Analysis Mode:</label>
+                        <div class="mode-options">
+                            <label class="mode-option">
+                                <input type="radio" name="atsMode" value="quick" id="atsModeQuick">
+                                <span class="mode-text"><i class="fas fa-bolt"></i> Quick Scan</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="atsMode" value="deep" id="atsModeDeep" checked>
+                                <span class="mode-text"><i class="fas fa-microscope"></i> Deep Analysis</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -116,44 +150,51 @@
                 <!-- JD Match result will appear here -->
             </div>
 
+            <!-- ATS Score Result Section -->
+            <div id="atsResult" class="ats-result" style="display: none;" role="region" aria-live="polite"
+                aria-label="ATS score results">
+                <!-- ATS Score result will appear here -->
+            </div>
+
             <!-- Error Section -->
             <div id="error" class="error-message" style="display: none;" role="alert" aria-live="assertive">
                 <!-- Error messages will appear here -->
             </div>
-        </main>
+    </div>
+    </main>
 
-        <footer>
-            <div class="footer-stats">
-                <div class="stat-item">
-                    <i class="fas fa-file-alt"></i>
-                    <div>
-                        <strong>Formats</strong>
-                        <span>PDF, TXT</span>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <i class="fas fa-database"></i>
-                    <div>
-                        <strong>Max Size</strong>
-                        <span>16MB</span>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <i class="fas fa-brain"></i>
-                    <div>
-                        <strong>AI Model</strong>
-                        <span>Transformer</span>
-                    </div>
+    <footer>
+        <div class="footer-stats">
+            <div class="stat-item">
+                <i class="fas fa-file-alt"></i>
+                <div>
+                    <strong>Formats</strong>
+                    <span>PDF, TXT</span>
                 </div>
             </div>
-            <p class="info-text">
-                <i class="fas fa-calculator"></i> <strong>Match Algorithm:</strong> Multi-factor scoring (Semantic +
-                Keywords + Skills + Context)
-            </p>
-            <p class="privacy-note">
-                <i class="fas fa-lock"></i> Your resume is processed securely and not stored permanently on our servers.
-            </p>
-        </footer>
+            <div class="stat-item">
+                <i class="fas fa-database"></i>
+                <div>
+                    <strong>Max Size</strong>
+                    <span>16MB</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-brain"></i>
+                <div>
+                    <strong>AI Model</strong>
+                    <span>Transformer</span>
+                </div>
+            </div>
+        </div>
+        <p class="info-text">
+            <i class="fas fa-calculator"></i> <strong>Match Algorithm:</strong> Multi-factor scoring (Semantic +
+            Keywords + Skills + Context)
+        </p>
+        <p class="privacy-note">
+            <i class="fas fa-lock"></i> Your resume is processed securely and not stored permanently on our servers.
+        </p>
+    </footer>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

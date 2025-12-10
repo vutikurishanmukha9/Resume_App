@@ -1,6 +1,6 @@
 # AI Resume Analyzer
 
-An AI-powered web application that analyzes resumes, matches them with job descriptions, and predicts the best-fit job titles using advanced NLP and machine learning techniques.
+An AI-powered web application that analyzes resumes, matches them with job descriptions, calculates ATS scores, and predicts the best-fit job titles using advanced NLP and machine learning techniques.
 
 ---
 
@@ -13,7 +13,14 @@ An AI-powered web application that analyzes resumes, matches them with job descr
 - **AI-Powered Matching** - Uses state-of-the-art NLP models for:
   - Predicted job title that best fits your profile
   - Skill match percentage between your resume and the JD
-- **Modern UI/UX** - Features a dark theme with glassmorphism effects, smooth animations, and responsive design
+- **ATS Score Analysis** - Comprehensive Applicant Tracking System scoring with:
+  - Overall ATS compatibility score (0-100)
+  - Sub-scores for keywords, skills, experience, and education
+  - Quick Scan and Deep Analysis modes
+  - Matched and missing keywords identification
+  - Actionable improvement suggestions
+- **Light/Dark Theme** - Toggle between dark and light modes with theme persistence
+- **Modern UI/UX** - Features glassmorphism effects, smooth animations, custom scrollbars, and responsive design
 - **Real-Time Analysis** - Receive instantaneous results upon submission without page reloads
 
 ### Advanced Features
@@ -25,8 +32,24 @@ An AI-powered web application that analyzes resumes, matches them with job descr
   - Optional (Low Priority)
 - **Actionable Recommendations** - Provides specific suggestions on which keywords and skills to add
 - **Skills Breakdown** - Categorized view of matched vs. missing skills by technology domain
+- **Achievement Detection** - Identifies quantifiable achievements in your resume
+- **Experience Analysis** - Extracts and analyzes years of experience
+- **Education Detection** - Identifies education level (Bachelor's, Master's, PhD)
 - **Analytics Tracking** - Logs usage patterns and model performance for continuous improvement
 - **Rate Limiting** - Prevents abuse with request throttling protection
+
+---
+
+## Screenshots
+
+### Dark Mode (Default)
+The application features a sleek dark theme with gradient accents and glassmorphism effects.
+
+### Light Mode
+A clean, professional light theme with soft colors and pleasant aesthetics.
+
+### ATS Score Analysis
+Comprehensive ATS scoring with detailed breakdown of sub-scores, matched keywords, and improvement suggestions.
 
 ---
 
@@ -37,7 +60,7 @@ An AI-powered web application that analyzes resumes, matches them with job descr
 | Backend | Flask (Python) | Lightweight web framework for the REST API |
 | Frontend | HTML5, CSS3, JavaScript | Responsive UI with glassmorphism and animations |
 | AI/NLP Models | Sentence Transformers, Scikit-learn | Text embedding, similarity, and job title prediction |
-| Libraries | PyPDF2, NumPy, Pandas, Joblib, Flask-Limiter | PDF parsing, data manipulation, model serialization |
+| Libraries | PyPDF2, NumPy, Pandas, Joblib, Flask-Limiter, Flask-CORS | PDF parsing, data manipulation, model serialization |
 | Deployment | Render, Railway, Docker | Cloud deployment with containerization support |
 
 ---
@@ -50,14 +73,16 @@ Resume_App/
 │   ├── app.py                  # Main Flask application
 │   ├── config.py               # Configuration settings
 │   ├── services/               # Business logic modules
-│   │   └── model_manager.py    # ML model loading and management
+│   │   ├── model_manager.py    # ML model loading and management
+│   │   └── ats_scorer.py       # ATS scoring engine
 │   ├── routes/                 # Route blueprints (future expansion)
 │   └── utils/                  # Utility functions
 │
 ├── frontend/                   # Frontend assets
 │   ├── static/
-│   │   ├── style.css           # Dark theme styling
-│   │   └── script.js           # Frontend logic and API handling
+│   │   ├── style.css           # Dark/Light theme styling
+│   │   ├── script.js           # Frontend logic and API handling
+│   │   └── favicon.png         # Application favicon
 │   └── templates/
 │       └── index.html          # Single-page application interface
 │
@@ -143,10 +168,28 @@ Open your browser and navigate to: `http://127.0.0.1:5000/`
    - Education level (Bachelor's, Master's, PhD)
    - Seniority level (Entry, Mid, Senior, Lead)
    - Technical skills (200+ skills across 13 categories)
+   - Quantifiable achievements
 4. **Embedding** - The Sentence Transformer model converts text into numerical vector embeddings
 5. **Matching** - Cosine similarity is calculated to determine the skill match percentage
 6. **Prediction** - A trained ML model predicts the best-fit job title
-7. **Insights** - The system provides detailed breakdowns, missing keywords, and suggestions
+7. **ATS Scoring** - Comprehensive ATS compatibility analysis with weighted scoring
+8. **Insights** - The system provides detailed breakdowns, missing keywords, and suggestions
+
+### ATS Scoring System
+
+The ATS Scorer analyzes resumes against job descriptions using multiple factors:
+
+| Component | Weight | Description |
+|:----------|:-------|:------------|
+| Keywords Match | 35% | Presence of required and preferred keywords |
+| Skills Match | 25% | Technical skills alignment with requirements |
+| Experience Match | 20% | Years of experience vs. requirements |
+| Education Match | 10% | Education level alignment |
+| Formatting | 10% | Resume structure and section detection |
+
+**Analysis Modes:**
+- **Quick Scan** - Fast keyword-based analysis for rapid feedback
+- **Deep Analysis** - Comprehensive analysis including semantic matching, achievement detection, and detailed recommendations
 
 ### Skills Taxonomy
 
@@ -194,6 +237,7 @@ docker run -p 5000:5000 resume-analyzer
 | `/` | GET | Main application interface |
 | `/upload` | POST | Upload and analyze resume |
 | `/match_jd_resume` | POST | Match resume with job description |
+| `/ats_score` | POST | Calculate ATS score for resume against JD |
 | `/health` | GET | Health check endpoint |
 | `/ready` | GET | Model readiness check |
 
@@ -211,14 +255,14 @@ When limits are exceeded, users receive a friendly error message with retry info
 
 ---
 
-## Future Roadmap
+## Theme Customization
 
-- Voice resume input for accessibility
-- Integration with large language models for detailed resume feedback
-- Multi-language resume parsing
-- ATS optimization scoring
-- Resume comparison mode for multiple candidates
-- Analytics dashboard
+The application supports two themes:
+
+- **Dark Mode** (Default) - Sleek dark theme with gradient accents, custom scrollbars, and glassmorphism effects
+- **Light Mode** - Clean, professional light theme with soft colors and pleasant aesthetics
+
+Theme preference is automatically saved and persists across browser sessions.
 
 ---
 

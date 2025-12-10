@@ -17,6 +17,9 @@ from collections import Counter
 import json
 from datetime import datetime
 
+# Import ATS Scorer service
+from backend.services.ats_scorer import ATSScorer, calculate_ats_score as ats_calculate_score
+
 # -------------------- CONFIGURATION --------------------
 import sys
 import threading
@@ -1246,6 +1249,111 @@ def match_jd_resume():
         logger.error(f"JD Match Error: {e}")
         logger.error(traceback.format_exc())
         return jsonify({'error': 'Failed to calculate match percentage. Please try again.'}), 500
+
+
+@app.route('/ats_score', methods=['POST'])
+@limiter.limit("10 per minute") if limiter else lambda f: f
+def calculate_ats_score_endpoint():
+    """Calculate comprehensive ATS score for resume against job description"""
+    try:
+        # Check if models are loaded
+        if not model_manager.is_loaded():
+            return jsonify({'error': 'System is still initializing. Please try again.'}), 503
+
+        # Get mode (quick or deep)
+        mode = request.form.get('mode', 'deep').lower()
+        if mode not in ['quick', 'deep']:
+            mode = 'deep'
+        
+        # Get JD text
+        jd_text = request.form.get('jd_text', '').strip()
+        jd_title = request.form.get('jd_title', '').strip()
+        
+        if not jd_text:
+            return jsonify({'error': 'Please provide a job description'}), 400
+        
+        # Get resume file
+        if 'resume' not in request.files:
+            return jsonify({'error': 'No resume file uploaded'}), 400
+        
+        resume_file = request.files['resume']
+        
+        if not resume_file or resume_file.filename == '':
+            return jsonify({'error': 'Please upload a resume file'}), 400
+        
+        if not allowed_file(resume_file.filename):
+            return jsonify({'error': 'Invalid file type. Only PDF and TXT files are allowed.'}), 400
+
+        # Process file
+        filename = secure_filename(resume_file.filename)
+        if not filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+        
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        with temporary_file(file_path):
+            resume_file.save(file_path)
+            
+            # Extract text
+            resume_text = extract_text_from_file(file_path, filename)
+            
+            # Extract skills from resume using existing function
+            resume_skills_dict = extract_skills(resume_text)
+            resume_skills = list(get_all_skills_flat(resume_skills_dict))
+            
+            # Extract keywords from JD using existing function
+            jd_keywords = extract_keywords(jd_text)
+            
+            # Calculate semantic similarity if in deep mode
+            semantic_similarity = None
+            if mode == 'deep' and model_manager.embed_model:
+                try:
+                    resume_embedding = model_manager.embed_model.encode(resume_text[:MAX_TEXT_LENGTH], convert_to_tensor=True)
+                    jd_embedding = model_manager.embed_model.encode(jd_text[:MAX_TEXT_LENGTH], convert_to_tensor=True)
+                    semantic_similarity = float(util.cos_sim(resume_embedding, jd_embedding)[0][0])
+                except Exception as e:
+                    logger.warning(f"Semantic similarity calculation failed: {e}")
+            
+            # Parse optional parameters
+            try:
+                required_years = int(request.form.get('required_years', 0))
+            except ValueError:
+                required_years = 0
+            
+            required_education = request.form.get('required_education', None)
+            
+            # Calculate ATS score
+            scorer = ATSScorer(mode=mode)
+            ats_result = scorer.calculate_ats_score(
+                resume_text=resume_text,
+                jd_text=jd_text,
+                jd_title=jd_title,
+                required_years=required_years,
+                required_education=required_education,
+                resume_skills=resume_skills,
+                jd_keywords=jd_keywords,
+                semantic_similarity=semantic_similarity
+            )
+            
+            # Track analytics
+            track_analysis('ats_score', {
+                'ats_score': ats_result.get('ats_score', 0),
+                'mode': mode,
+                'sub_scores': ats_result.get('sub_scores', {})
+            })
+
+            return jsonify({
+                'success': True,
+                **ats_result
+            }), 200
+
+    except ValueError as e:
+        logger.warning(f"Validation error in ATS score: {e}")
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logger.error(f"ATS Score Error: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': 'Failed to calculate ATS score. Please try again.'}), 500
 
 
 @app.route('/ready', methods=['GET'])
