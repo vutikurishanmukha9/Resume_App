@@ -492,47 +492,138 @@ def generate_suggestions(
     achievements: List[Dict],
     experience: Dict,
     sections: Dict[str, str],
-    formatting_penalty: Dict
+    formatting_penalty: Dict,
+    skill_score: int = 0,
+    title_score: int = 0,
+    education_score: int = 0,
+    matched_skills: Dict[str, List[str]] = None
 ) -> List[str]:
-    """Generate actionable improvement suggestions."""
+    """
+    Generate dynamic, context-aware improvement suggestions.
+    
+    Suggestions are prioritized and specific to the actual gaps found.
+    """
     suggestions = []
     
-    # Missing critical keywords
-    if missing_keywords.get('critical'):
-        top_critical = missing_keywords['critical'][:3]
-        suggestions.append(f"Add critical keywords if applicable: {', '.join(top_critical)}")
+    # Priority 1: Critical missing keywords (most impactful)
+    critical_missing = missing_keywords.get('critical', [])
+    if critical_missing:
+        if len(critical_missing) >= 5:
+            top_3 = critical_missing[:3]
+            suggestions.append(
+                f"CRITICAL: Add these required skills to your resume: {', '.join(top_3)} "
+                f"(+{len(critical_missing) - 3} more missing)"
+            )
+        elif len(critical_missing) >= 2:
+            suggestions.append(
+                f"Add these required keywords: {', '.join(critical_missing)}"
+            )
+        else:
+            suggestions.append(
+                f"Add the required keyword '{critical_missing[0]}' to match the job description"
+            )
     
-    # Missing important keywords
-    if missing_keywords.get('important'):
-        top_important = missing_keywords['important'][:2]
-        suggestions.append(f"Consider adding: {', '.join(top_important)}")
+    # Priority 2: Important missing keywords
+    important_missing = missing_keywords.get('important', [])
+    if important_missing and len(suggestions) < 4:
+        top_important = important_missing[:3]
+        suggestions.append(
+            f"Consider adding preferred skills: {', '.join(top_important)}"
+        )
     
-    # Achievement suggestions
-    if len(achievements) < 3:
-        suggestions.append("Quantify more achievements with metrics (%, $, numbers)")
+    # Priority 3: Skill match suggestions (based on actual score)
+    if skill_score is not None:
+        if skill_score < 30:
+            suggestions.append(
+                "Your skill match is low. Review the job description and add relevant technologies you know"
+            )
+        elif skill_score < 50:
+            # Suggest adding more matched skills context
+            if matched_skills:
+                matched_count = sum(len(v) for v in matched_skills.values())
+                if matched_count < 5:
+                    suggestions.append(
+                        f"Only {matched_count} skills matched. List more of your technical skills explicitly"
+                    )
     
-    # Experience suggestions
-    if experience.get('total_years', 0) == 0:
-        suggestions.append("Clearly state your years of experience")
+    # Priority 4: Achievement suggestions (dynamic based on count)
+    achievement_count = len(achievements)
+    if achievement_count == 0:
+        suggestions.append(
+            "Add quantified achievements with metrics (%, $, numbers) to show impact"
+        )
+    elif achievement_count < 3:
+        needed = 3 - achievement_count
+        suggestions.append(
+            f"Add {needed} more quantified achievements. Examples: 'Increased X by 25%', 'Reduced Y by $10K'"
+        )
     
-    if not experience.get('skill_years'):
-        suggestions.append("Add years of experience for key skills (e.g., 'Python - 4 years')")
+    # Priority 5: Experience suggestions (based on actual data)
+    total_years = experience.get('total_years', 0)
+    skill_years = experience.get('skill_years', {})
     
-    # Section suggestions
+    if total_years == 0:
+        suggestions.append(
+            "Specify your total years of experience clearly (e.g., '5+ years of experience')"
+        )
+    elif not skill_years:
+        suggestions.append(
+            "Add years of experience for key skills (e.g., 'Python - 4 years', 'AWS - 2 years')"
+        )
+    
+    # Priority 6: Section suggestions (specific to what's missing)
+    missing_sections = []
     if 'skills' not in sections:
-        suggestions.append("Add a dedicated Skills section with keywords")
-    
+        missing_sections.append('Skills')
     if 'summary' not in sections:
-        suggestions.append("Add a Professional Summary at the top")
+        missing_sections.append('Professional Summary')
+    if 'projects' not in sections and 'experience' not in sections:
+        missing_sections.append('Projects or Experience')
     
-    # Formatting suggestions
+    if missing_sections and len(suggestions) < 5:
+        suggestions.append(
+            f"Add missing sections: {', '.join(missing_sections)}"
+        )
+    
+    # Priority 7: Title match suggestions
+    if title_score is not None and title_score < 50:
+        suggestions.append(
+            "Include the target job title or related titles in your resume summary"
+        )
+    
+    # Priority 8: Education suggestions
+    if education_score is not None and education_score < 40:
+        suggestions.append(
+            "Clearly list your educational qualifications with degree names"
+        )
+    
+    # Priority 9: Formatting suggestions (specific)
     for detail in formatting_penalty.get('details', []):
-        if 'bullet' in detail.lower():
-            suggestions.append("Use more bullet points to highlight achievements")
-        elif 'contact' in detail.lower():
-            suggestions.append("Add contact information (email, phone)")
+        if 'bullet' in detail.lower() and len(suggestions) < 6:
+            suggestions.append(
+                "Use more bullet points (aim for 3-5 per job) to highlight key accomplishments"
+            )
+        elif 'contact' in detail.lower() and len(suggestions) < 6:
+            suggestions.append(
+                "Add complete contact information: email, phone, LinkedIn profile"
+            )
+        elif 'date' in detail.lower() and len(suggestions) < 6:
+            suggestions.append(
+                "Use specific date ranges (e.g., 'Jan 2020 - Dec 2023') instead of vague dates"
+            )
     
-    return suggestions[:6]  # Limit to top 6 suggestions
+    # Priority 10: General improvement if score is still low
+    if len(suggestions) < 3:
+        # Add general tips if we don't have enough specific suggestions
+        optional_missing = missing_keywords.get('optional', [])
+        if optional_missing and len(optional_missing) > 3:
+            suggestions.append(
+                f"Bonus: Include optional skills like {', '.join(optional_missing[:2])} if applicable"
+            )
+    
+    # Return top 6 most impactful suggestions
+    return suggestions[:6]
+
 
 
 # ==================== MAIN SCORER CLASS ====================
@@ -841,13 +932,17 @@ class ATSScorer:
         
         final_score = max(0, min(100, int(final_score)))
         
-        # Generate suggestions
+        # Generate dynamic suggestions with context
         suggestions = generate_suggestions(
             skill_result['missing'],
             achievements,
             experience,
             sections,
-            formatting
+            formatting,
+            skill_score=skill_result['score'],
+            title_score=title_result['score'],
+            education_score=education_result['score'],
+            matched_skills=skill_result['matched']
         )
         
         # Build matched keywords with importance

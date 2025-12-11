@@ -72,20 +72,23 @@
 
 /* ==================== LIGHT MODE ==================== */
 [data-theme="light"] {
-    /* Light Theme - Soft, Pleasant Colors */
+    /* Light Theme - Clean, Professional Solid Colors */
+
+    /* Background Colors - Soft whites and grays */
     --bg-primary: #f8fafc;
     --bg-secondary: #f1f5f9;
-    --bg-glass: rgba(255, 255, 255, 0.85);
-    --bg-input: rgba(241, 245, 249, 0.9);
+    --bg-glass: rgba(255, 255, 255, 0.92);
+    --bg-input: #ffffff;
 
-    /* Text Colors - Softer than pure black */
+    /* Text Colors - High contrast, easy to read */
     --text-light: #1e293b;
     --text-primary: #334155;
     --text-secondary: #475569;
     --text-muted: #64748b;
 
-    /* Accent Colors - Slightly muted for light mode */
+    /* Accent Colors - Solid, vibrant but not harsh */
     --primary: #2563eb;
+    --primary-dark: #1d4ed8;
     --info: #0891b2;
     --success: #059669;
     --warning: #d97706;
@@ -93,24 +96,29 @@
 
     /* Neutral Colors */
     --white: #ffffff;
-    --gray-900: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-900: #1e293b;
 
-    /* Gradients - Soft, pleasant for eyes */
-    --primary-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    /* NO GRADIENTS - Solid colors only */
+    --primary-gradient: #2563eb;
+    --accent-gradient: #0891b2;
+    --success-gradient: #059669;
 
-    /* Shadows - Softer for light mode */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    /* Shadows - Subtle and professional */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
-    --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
-    --shadow-glow-success: 0 0 20px rgba(5, 150, 105, 0.15);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.12);
+    --shadow-glow-success: 0 0 15px rgba(5, 150, 105, 0.12);
 
-    /* Border & Card */
-    --border-color: rgba(0, 0, 0, 0.08);
-    --card-bg: rgba(255, 255, 255, 0.7);
+    /* Border & Card - Clean edges */
+    --border-color: #e2e8f0;
+    --card-bg: #ffffff;
 }
 
 /* ==================== RESET & BASE ==================== */
@@ -435,25 +443,408 @@ header {
 }
 
 [data-theme="light"] .result-card {
-    background: var(--card-bg);
-    border-color: var(--border-color);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .result-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Light mode theme toggle button */
 [data-theme="light"] .theme-toggle {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid rgba(59, 130, 246, 0.3);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .theme-toggle:hover {
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 [data-theme="light"] .theme-toggle #sunIcon {
     color: #f59e0b;
 }
+
+/* Light mode buttons - NO GRADIENTS */
+[data-theme="light"] .analyze-btn {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="light"] .analyze-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+[data-theme="light"] .match-btn {
+    background: #059669;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+[data-theme="light"] .match-btn:hover:not(:disabled) {
+    background: #047857;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+[data-theme="light"] .ats-btn {
+    background: #7c3aed;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+[data-theme="light"] .ats-btn:hover:not(:disabled) {
+    background: #6d28d9;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+}
+
+/* Light mode job badge - solid color */
+[data-theme="light"] .job-badge {
+    background: #0891b2;
+    color: #ffffff;
+}
+
+/* Light mode score bars - solid colors */
+[data-theme="light"] .score-fill,
+[data-theme="light"] .match-bar-fill,
+[data-theme="light"] .component-bar-fill,
+[data-theme="light"] .progress-fill {
+    background: #0891b2;
+}
+
+[data-theme="light"] .score-bar,
+[data-theme="light"] .match-bar,
+[data-theme="light"] .component-bar,
+[data-theme="light"] .progress-bar {
+    background: #e2e8f0;
+}
+
+/* Light mode match cards */
+[data-theme="light"] .match-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+}
+
+[data-theme="light"] .match-card.excellent {
+    border-color: #059669;
+    background: #f0fdf4;
+}
+
+[data-theme="light"] .match-card.good {
+    border-color: #0891b2;
+    background: #f0f9ff;
+}
+
+[data-theme="light"] .match-card.moderate {
+    border-color: #d97706;
+    background: #fffbeb;
+}
+
+[data-theme="light"] .match-card.low {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+
+/* Light mode match percentage - solid color text */
+[data-theme="light"] .match-percentage-large {
+    color: #0891b2;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: #0891b2;
+    background-clip: unset;
+}
+
+[data-theme="light"] .match-card.excellent .match-percentage-large {
+    color: #059669;
+    -webkit-text-fill-color: #059669;
+}
+
+[data-theme="light"] .match-card.good .match-percentage-large {
+    color: #0891b2;
+    -webkit-text-fill-color: #0891b2;
+}
+
+[data-theme="light"] .match-card.moderate .match-percentage-large {
+    color: #d97706;
+    -webkit-text-fill-color: #d97706;
+}
+
+[data-theme="light"] .match-card.low .match-percentage-large {
+    color: #dc2626;
+    -webkit-text-fill-color: #dc2626;
+}
+
+/* Light mode section backgrounds */
+[data-theme="light"] .result-section,
+[data-theme="light"] .jd-match-result,
+[data-theme="light"] .ats-result {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Light mode component items */
+[data-theme="light"] .component-item,
+[data-theme="light"] .match-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .component-item:hover,
+[data-theme="light"] .match-item:hover {
+    background: #f1f5f9;
+}
+
+/* Light mode badges */
+[data-theme="light"] .keyword-badge,
+[data-theme="light"] .skill-badge {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+[data-theme="light"] .keyword-badge.matched,
+[data-theme="light"] .skill-badge.matched {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+}
+
+[data-theme="light"] .keyword-badge.missing,
+[data-theme="light"] .skill-badge.missing {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+/* Light mode h1 icon - solid color */
+[data-theme="light"] h1 i {
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: #0891b2;
+    background-clip: unset;
+    color: #0891b2;
+    filter: none;
+}
+
+/* Light mode h1 text shadow removal */
+[data-theme="light"] h1 {
+    text-shadow: none;
+    color: #1e293b;
+}
+
+/* Light mode container */
+[data-theme="light"] .container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* ==================== LIGHT MODE - ATS SCORE COMPONENTS ==================== */
+
+/* Sub-score items - NO GRAY BACKGROUNDS */
+[data-theme="light"] .sub-score-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .sub-score-item.penalty {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+[data-theme="light"] .sub-score-bar {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] .sub-score-fill {
+    background: #059669;
+}
+
+[data-theme="light"] .sub-score-fill.penalty {
+    background: #dc2626;
+}
+
+[data-theme="light"] .sub-score-label {
+    color: #334155;
+}
+
+[data-theme="light"] .sub-score-label i {
+    color: #2563eb;
+}
+
+[data-theme="light"] .sub-score-item.penalty .sub-score-label i {
+    color: #dc2626;
+}
+
+[data-theme="light"] .sub-score-value {
+    color: #059669;
+}
+
+[data-theme="light"] .sub-score-item.penalty .sub-score-value {
+    color: #dc2626;
+}
+
+[data-theme="light"] .sub-score-weight {
+    color: #64748b;
+}
+
+/* ATS Score Card - Light Mode */
+[data-theme="light"] .ats-score-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .ats-score-card.excellent {
+    border-color: #059669;
+    background: #f0fdf4;
+}
+
+[data-theme="light"] .ats-score-card.good {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+[data-theme="light"] .ats-score-card.fair {
+    border-color: #d97706;
+    background: #fffbeb;
+}
+
+[data-theme="light"] .ats-score-card.poor {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+
+[data-theme="light"] .score-circle .score-bg {
+    stroke: #e2e8f0;
+}
+
+[data-theme="light"] .score-value {
+    color: #1e293b;
+}
+
+[data-theme="light"] .score-badge {
+    border: 1px solid;
+}
+
+[data-theme="light"] .score-badge.excellent {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+[data-theme="light"] .score-badge.good {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+[data-theme="light"] .score-badge.fair {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+[data-theme="light"] .score-badge.poor {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+[data-theme="light"] .score-message {
+    color: #475569;
+}
+
+/* ATS Mode Badge - Light Mode */
+[data-theme="light"] .ats-mode-badge.deep {
+    background: #f3e8ff;
+    color: #7c3aed;
+    border: 1px solid #c4b5fd;
+}
+
+[data-theme="light"] .ats-mode-badge.quick {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* Confidence indicators - Light Mode */
+[data-theme="light"] .salary-details {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .confidence-bar {
+    background: #e2e8f0;
+}
+
+[data-theme="light"] .confidence-fill.high {
+    background: #059669;
+}
+
+[data-theme="light"] .confidence-fill.medium {
+    background: #d97706;
+}
+
+[data-theme="light"] .confidence-fill.low {
+    background: #dc2626;
+}
+
+[data-theme="light"] .confidence-badge.high {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+[data-theme="light"] .confidence-badge.medium {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+[data-theme="light"] .confidence-badge.low {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+/* Keywords and suggestions - Light Mode */
+[data-theme="light"] .suggestions-card {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+}
+
+[data-theme="light"] .suggestions-card h3 i,
+[data-theme="light"] .suggestions-list li i {
+    color: #d97706;
+}
+
+[data-theme="light"] .achievements-list li {
+    background: #f0fdf4;
+    border-left-color: #059669;
+    color: #334155;
+}
+
+[data-theme="light"] .achievements-list li i {
+    color: #059669;
+}
+
+/* Body and background - Light Mode */
+[data-theme="light"] body {
+    background: #f8fafc;
+    background-image: none;
+}
+
+[data-theme="light"] .animated-bg {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
 
 h1 {
     font-family: var(--font-display);
@@ -1087,20 +1478,27 @@ footer {
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     body {
-        padding: var(--space-4);
+        padding: var(--space-3);
     }
 
     .container {
-        padding: var(--space-8);
-        margin: var(--space-8) auto;
+        padding: var(--space-5);
+        margin: var(--space-4) auto;
+        overflow-x: hidden;
     }
 
     h1 {
-        font-size: 2rem;
+        font-size: 1.75rem;
+        word-wrap: break-word;
+    }
+
+    .subtitle {
+        font-size: 0.95rem;
     }
 
     .button-group {
         grid-template-columns: 1fr;
+        gap: var(--space-3);
     }
 
     .footer-stats {
@@ -1108,12 +1506,204 @@ footer {
     }
 
     .file-label {
-        min-height: 180px;
-        padding: var(--space-8);
+        min-height: 150px;
+        padding: var(--space-6);
     }
 
     .file-icon {
+        font-size: 2.5rem;
+    }
+
+    /* ATS Score responsive */
+    .ats-score-card {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--space-5);
+    }
+
+    .score-circle {
+        width: 100px;
+        height: 100px;
+    }
+
+    .score-value {
+        font-size: 1.75rem;
+    }
+
+    .score-info {
+        text-align: center;
+    }
+
+    /* Sub-scores responsive */
+    .sub-score-item {
+        padding: var(--space-2);
+    }
+
+    .sub-score-header {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    .sub-score-label {
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: 0;
+        word-wrap: break-word;
+    }
+
+    .sub-score-value {
+        font-size: 0.9rem;
+    }
+
+    .sub-score-weight {
+        font-size: 0.7rem;
+    }
+
+    /* Text overflow fixes */
+    .result-card {
+        padding: var(--space-4);
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+
+    .result-card h3 {
+        font-size: 1rem;
+    }
+
+    .job-badge {
+        font-size: 0.9rem;
+        padding: var(--space-3) var(--space-4);
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    /* Match card responsive */
+    .match-percentage-large {
         font-size: 3rem;
+    }
+
+    .match-level {
+        font-size: 1.2rem;
+    }
+
+    .match-description {
+        font-size: 0.9rem;
+    }
+
+    /* Textarea responsive */
+    textarea {
+        min-height: 120px;
+        font-size: 0.9rem;
+    }
+
+    /* Keywords responsive */
+    .keyword-badge,
+    .skill-badge {
+        font-size: 0.75rem;
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .keywords-list {
+        gap: var(--space-1);
+    }
+
+    /* ATS mode toggle responsive */
+    .ats-mode-toggle {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .mode-option {
+        width: 100%;
+        justify-content: center;
+        padding: var(--space-3);
+    }
+
+    /* Theme toggle responsive */
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+        top: var(--space-3);
+        right: var(--space-3);
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: var(--space-2);
+    }
+
+    .container {
+        padding: var(--space-4);
+        margin: var(--space-2) auto;
+        border-radius: var(--radius-lg);
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+    }
+
+    .file-label {
+        min-height: 120px;
+        padding: var(--space-5);
+    }
+
+    .file-icon {
+        font-size: 2rem;
+    }
+
+    .file-text {
+        font-size: 0.9rem;
+    }
+
+    .score-circle {
+        width: 80px;
+        height: 80px;
+    }
+
+    .score-value {
+        font-size: 1.5rem;
+    }
+
+    .match-percentage-large {
+        font-size: 2.5rem;
+    }
+
+    .match-level {
+        font-size: 1rem;
+    }
+
+    .stat-item {
+        padding: var(--space-3);
+    }
+
+    .stat-item i {
+        font-size: 1rem;
+    }
+
+    .stat-item strong {
+        font-size: 0.8rem;
+    }
+
+    .stat-item span {
+        font-size: 0.75rem;
+    }
+
+    /* Suggestions list responsive */
+    .suggestions-list li {
+        font-size: 0.85rem;
+        padding: var(--space-2);
+    }
+
+    .achievements-list li {
+        font-size: 0.85rem;
+        padding: var(--space-2) var(--space-3);
     }
 }
 
