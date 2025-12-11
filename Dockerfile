@@ -16,11 +16,10 @@ COPY . .
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-# DO NOT set a fixed PORT here — Render provides $PORT at runtime
-# ENV PORT=8080   <-- remove this line
+# Default port for Hugging Face Spaces; can be overridden by $PORT env var
+ENV PORT=7860
+EXPOSE 7860
 
-# EXPOSE is optional for Render; leaving it is harmless but not required
-EXPOSE 8080
+# Bind to runtime $PORT (HF uses 7860, Railway/Render inject their own)
+CMD ["sh", "-c", "gunicorn run:app --bind 0.0.0.0:${PORT:-7860} --workers 1 --timeout 300 --log-level info"]
 
-# Bind to the runtime $PORT. Use 1 worker while debugging to avoid OOM/worker crashes.
-CMD ["sh", "-c", "gunicorn run:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info"]
