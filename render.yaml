@@ -6,7 +6,7 @@ services:
     name: resume-analyzer
     runtime: python
     buildCommand: pip install --no-cache-dir -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info
+    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --log-level info
     envVars:
       - key: PYTHON_VERSION
         value: "3.10.12"
