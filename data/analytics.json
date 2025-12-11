@@ -105,12 +105,21 @@
         "salary": 712314,
         "confidence": 1.0
       }
+    },
+    {
+      "timestamp": "2025-12-11T14:02:22.182674",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
     }
   ],
   "summary": {
-    "total_uploads": 6,
+    "total_uploads": 7,
     "total_matches": 4,
     "avg_match_score": 41.925,
-    "last_updated": "2025-12-07T18:19:28.801284"
+    "last_updated": "2025-12-11T14:02:22.182674"
   }
 }
