@@ -1,9 +1,3 @@
-"""
-ATS (Applicant Tracking System) Score Calculator Service
-
-This module provides comprehensive resume-to-job-description scoring
-with multiple sub-scores and actionable feedback.
-"""
 
 import re
 import json

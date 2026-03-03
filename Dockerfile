@@ -1,5 +1,16 @@
-FROM python:3.10-slim
+# Stage 1: Build the React Frontend
+FROM node:20-alpine AS build-stage
+WORKDIR /app
+COPY frontend/package*.json ./frontend/
+WORKDIR /app/frontend
+RUN npm ci
+COPY frontend ./
+RUN npm run build
 
+# Stage 2: Build the FastAPI Backend
+FROM python:3.10-slim AS production-stage
+
+# Install OS-level dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libglib2.0-0 libsm6 libxext6 libxrender1 \
@@ -8,18 +19,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Install Python requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy backend source code including data handling modules
+COPY backend ./backend
 
+# Copy the built React UI from the frontend stage
+COPY --from=build-stage /app/frontend/dist ./frontend/dist
+
+# Secure AppUser configuration
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-# Default port for Hugging Face Spaces; can be overridden by $PORT env var
 ENV PORT=7860
 EXPOSE 7860
 
-# Bind to runtime $PORT (HF uses 7860, Railway/Render inject their own)
-CMD ["sh", "-c", "gunicorn run:app --bind 0.0.0.0:${PORT:-7860} --workers 1 --timeout 300 --log-level info"]
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860} --workers 1 --timeout-keep-alive 300 --log-level info"]
 

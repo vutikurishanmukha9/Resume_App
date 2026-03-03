@@ -11,8 +11,8 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 MODELS_DIR = BASE_DIR / "models"
 DATA_DIR = BASE_DIR / "data"
 
-# Flask config
-UPLOAD_FOLDER = BASE_DIR / "uploads"
+# App config
+UPLOAD_FOLDER = str(BASE_DIR / "uploads")
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
 

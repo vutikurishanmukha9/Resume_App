@@ -57,10 +57,10 @@ Comprehensive ATS scoring with detailed breakdown of sub-scores, matched keyword
 
 | Category | Technologies | Description |
 |:---------|:-------------|:------------|
-| Backend | Flask (Python) | Lightweight web framework for the REST API |
-| Frontend | HTML5, CSS3, JavaScript | Responsive UI with glassmorphism and animations |
+| Backend | FastAPI (Python) | High-performance asynchronous web framework for the REST API |
+| Frontend | React, Vite, Tailwind CSS, TypeScript, Lucide React | Modern decoupled Single-Page Application (SPA) architecture |
 | AI/NLP Models | Sentence Transformers, Scikit-learn | Text embedding, similarity, and job title prediction |
-| Libraries | PyPDF2, NumPy, Pandas, Joblib, Flask-Limiter, Flask-CORS | PDF parsing, data manipulation, model serialization |
+| Libraries | PyPDF2, NumPy, Pandas, Joblib, SlowAPI, FastAPI-CORS | PDF parsing, data manipulation, model serialization, rate limiting |
 | Deployment | Render, Railway, Docker | Cloud deployment with containerization support |
 
 ---
@@ -69,22 +69,27 @@ Comprehensive ATS scoring with detailed breakdown of sub-scores, matched keyword
 
 ```
 Resume_App/
-├── backend/                    # Python backend code
-│   ├── app.py                  # Main Flask application
+├── backend/                    # Python backend directory
+│   ├── main.py                 # Main FastAPI application
 │   ├── config.py               # Configuration settings
+│   ├── exceptions.py           # Custom exception handlers
+│   ├── rate_limiter.py         # Rate limiting configuration
 │   ├── services/               # Business logic modules
 │   │   ├── model_manager.py    # ML model loading and management
-│   │   └── ats_scorer.py       # ATS scoring engine
-│   ├── routes/                 # Route blueprints (future expansion)
+│   │   ├── ats_scorer.py       # ATS scoring engine
+│   │   └── ...                 
+│   ├── routes/                 # API endpoint routers
 │   └── utils/                  # Utility functions
 │
-├── frontend/                   # Frontend assets
-│   ├── static/
-│   │   ├── style.css           # Dark/Light theme styling
-│   │   ├── script.js           # Frontend logic and API handling
-│   │   └── favicon.png         # Application favicon
-│   └── templates/
-│       └── index.html          # Single-page application interface
+├── frontend/                   # React frontend application
+│   ├── src/                    # Components & application logic
+│   │   ├── components/         # React components (e.g., SkillsBreakdown)
+│   │   ├── hooks/              # Custom React hooks
+│   │   └── ...
+│   ├── public/                 # Static assets
+│   ├── package.json            # Node & npm configurations
+│   ├── vite.config.ts          # Vite bundler config
+│   └── tailwind.config.ts      # Tailwind styling configuration
 │
 ├── models/                     # Machine learning models
 │   ├── job_classifier.pkl      # Trained model for job prediction
@@ -145,15 +150,25 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Start the Application**
+4. **Start the Backend Server**
 
 ```bash
 python run.py
 ```
 
-5. **Access the Application**
+5. **Start the Frontend Application**
 
-Open your browser and navigate to: `http://127.0.0.1:5000/`
+Open a new terminal, navigate to the frontend directory, install dependencies, and start the development server:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+6. **Access the Application**
+
+Open your browser and navigate to the frontend URL (typically `http://localhost:5173/`). The backend will be running at `http://localhost:5000/`.
 
 ---
 
@@ -283,5 +298,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Acknowledgements
 
 - Sentence Transformers Team for the NLP models
-- Flask Community for the web framework
+- FastAPI Community for the web framework
 - Scikit-learn Contributors for the ML library

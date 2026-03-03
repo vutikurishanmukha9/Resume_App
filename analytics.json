@@ -1,0 +1,143 @@
+{
+  "analyses": [
+    {
+      "timestamp": "2025-12-08T11:34:48.749189",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2025-12-08T11:37:50.150711",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 61.87,
+        "component_scores": {
+          "semantic": 76.38,
+          "keyword": 49.05,
+          "skills": 66.67,
+          "context": 32.69
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-10T22:12:39.543140",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 10,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-10T22:14:09.422557",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 1,
+        "mode": "quick",
+        "sub_scores": {}
+      }
+    },
+    {
+      "timestamp": "2025-12-10T22:17:10.550063",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 65.78,
+        "component_scores": {
+          "semantic": 76.3,
+          "keyword": 68.33,
+          "skills": 55.56,
+          "context": 36.46
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-10T23:22:00.245911",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 10,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-11T12:23:33.056511",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 45,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 8,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-11T12:31:29.259191",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 45,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 8,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-11T12:32:15.412243",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 2,
+        "mode": "quick",
+        "sub_scores": {}
+      }
+    },
+    {
+      "timestamp": "2025-12-11T12:36:53.308336",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 45,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 8,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total_uploads": 1,
+    "total_matches": 2,
+    "avg_match_score": 63.825,
+    "last_updated": "2025-12-11T12:36:53.308336"
+  }
+}

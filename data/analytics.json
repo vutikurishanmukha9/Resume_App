@@ -114,12 +114,360 @@
         "salary": 711152,
         "confidence": 1.0
       }
+    },
+    {
+      "timestamp": "2026-03-03T14:55:18.607262",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.64,
+        "component_scores": {
+          "semantic": 63.9,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:45:29.278233",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Backend Developer",
+        "salary": 712604,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:45:30.666900",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 100,
+          "education": 75,
+          "formatting_penalty": 3
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:45:32.542210",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.69,
+        "component_scores": {
+          "semantic": 64.04,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:46:45.075584",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Backend Developer",
+        "salary": 712604,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:46:47.983936",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 100,
+          "education": 75,
+          "formatting_penalty": 3
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:46:54.949760",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.69,
+        "component_scores": {
+          "semantic": 64.04,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:53:57.892299",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Backend Developer",
+        "salary": 712604,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:53:58.912777",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 100,
+          "education": 75,
+          "formatting_penalty": 3
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:54:00.297246",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.69,
+        "component_scores": {
+          "semantic": 64.04,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:58:59.516260",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Backend Developer",
+        "salary": 712604,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:59:06.528096",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 100,
+          "education": 75,
+          "formatting_penalty": 3
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T15:59:07.942569",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.69,
+        "component_scores": {
+          "semantic": 64.04,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:01:10.857207",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Backend Developer",
+        "salary": 712604,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:01:11.737215",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 46,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 100,
+          "education": 75,
+          "formatting_penalty": 3
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:01:12.903488",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 51.69,
+        "component_scores": {
+          "semantic": 64.04,
+          "keyword": 39.4,
+          "skills": 53.85,
+          "context": 34.88
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:10:31.987972",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:10:32.438229",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 44,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 6,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:10:33.674215",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.97,
+        "component_scores": {
+          "semantic": 82.77,
+          "keyword": 38.73,
+          "skills": 61.54,
+          "context": 39.38
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:15:33.603863",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:15:39.142991",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 44,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 6,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:15:42.476491",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.97,
+        "component_scores": {
+          "semantic": 82.77,
+          "keyword": 38.73,
+          "skills": 61.54,
+          "context": 39.38
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:29:45.214468",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:29:45.740035",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 2,
+        "mode": "quick",
+        "sub_scores": {}
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:29:48.294897",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.97,
+        "component_scores": {
+          "semantic": 82.77,
+          "keyword": 38.73,
+          "skills": 61.54,
+          "context": 39.38
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:36:20.778349",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:36:23.869408",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 44,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 6,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T16:36:31.295002",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.97,
+        "component_scores": {
+          "semantic": 82.77,
+          "keyword": 38.73,
+          "skills": 61.54,
+          "context": 39.38
+        }
+      }
     }
   ],
   "summary": {
-    "total_uploads": 7,
-    "total_matches": 4,
-    "avg_match_score": 41.925,
-    "last_updated": "2025-12-11T14:02:22.182674"
+    "total_uploads": 16,
+    "total_matches": 14,
+    "avg_match_score": 51.54785714285714,
+    "last_updated": "2026-03-03T16:36:31.295002"
   }
 }
