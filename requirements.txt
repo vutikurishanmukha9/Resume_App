@@ -9,5 +9,5 @@ joblib==1.4.2
 scikit-learn==1.7.2
 sentence-transformers==5.1.2
 torch==2.3.1
-PyPDF2==3.0.1
+pdfplumber==0.11.9
 werkzeug==3.0.3

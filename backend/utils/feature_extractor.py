@@ -12,71 +12,149 @@ from datetime import datetime
 from backend.utils.skill_extractor import extract_skills, get_all_skills_flat
 
 
+def _parse_month(month_str: str) -> int:
+    """Convert a month abbreviation to its 1-based number."""
+    month_map = {
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4,
+        'may': 5, 'jun': 6, 'jul': 7, 'aug': 8,
+        'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+    }
+    return month_map.get(month_str[:3].lower(), 1)
+
+
+def _extract_experience_section(text: str) -> str:
+    """
+    Try to isolate the EXPERIENCE / WORK HISTORY section from resume text.
+    Returns just that section, or the full text if no section header is found.
+    Works with messy PDF-extracted text where newlines aren't always clean.
+    """
+    # Common section headers for experience
+    exp_headers = [
+        r'(?:professional\s+)?experience',
+        r'work\s+(?:experience|history)',
+        r'employment\s+history',
+        r'career\s+(?:history|summary)',
+        r'internship(?:s)?',
+    ]
+    # Section headers that typically follow experience
+    next_headers = [
+        r'education', r'skills', r'certifications?', r'projects?',
+        r'awards?', r'publications?', r'interests?', r'hobbies',
+        r'references?', r'activities', r'achievements?', r'summary',
+        r'objective', r'languages?', r'volunteer',
+    ]
+
+    text_lower = text.lower()
+
+    # Try multiple matching strategies (strict → relaxed)
+    patterns = [
+        r'(?:^|\n)\s*(?:' + '|'.join(exp_headers) + r')\s*\n',
+        r'(?:^|\n)\s*(?:' + '|'.join(exp_headers) + r')\s*(?:\n|.)',
+        r'\b(?:' + '|'.join(exp_headers) + r')\b',
+    ]
+
+    exp_match = None
+    for pat in patterns:
+        exp_match = re.search(pat, text_lower)
+        if exp_match:
+            break
+
+    if exp_match:
+        start = exp_match.end()
+
+        # Find the next section header after experience
+        next_patterns = [
+            r'(?:^|\n)\s*(?:' + '|'.join(next_headers) + r')\s*(?:\n|$)',
+            r'\b(?:' + '|'.join(next_headers) + r')\s*(?:\n|$)',
+        ]
+        next_match = None
+        for np in next_patterns:
+            next_match = re.search(np, text_lower[start:])
+            if next_match:
+                break
+
+        end = start + next_match.start() if next_match else len(text)
+        return text[start:end]
+
+    return text  # Fallback: use full text
+
+
 def extract_years_of_experience(text: str) -> float:
     """
     Extract years of experience from resume text.
-    Looks for patterns like "X years", "X+ years", date ranges, etc.
-    Uses dynamic current year for accurate calculation.
+
+    Strategy (in priority order):
+    1. Explicit statements like "X years of experience".
+    2. Month-level date-range parsing (e.g. "Jun 2024 – Aug 2024")
+       from the EXPERIENCE section only.
+    3. Year-only date-range fallback ("2019 – 2023").
     """
     text_lower = text.lower()
-    years = []
-    
-    # Get current year dynamically
-    current_year = datetime.now().year
-    
-    # Pattern 1: "X years of experience" or "X+ years"
-    pattern1 = r'(\d+)\+?\s*years?\s*(?:of)?\s*(?:experience|exp|expertise)'
-    matches1 = re.findall(pattern1, text_lower)
-    years.extend([int(m) for m in matches1])
-    
-    # Pattern 2: "X-Y years of experience"
-    pattern2 = r'(\d+)\s*[-–]\s*(\d+)\s*years?\s*(?:of)?\s*(?:experience|exp)'
-    matches2 = re.findall(pattern2, text_lower)
-    for min_yr, max_yr in matches2:
-        # Take the average or max of the range
-        years.append(int(max_yr))
-    
-    # Pattern 3: Extract years from date ranges
-    # Format: "2019 - 2023", "Jan 2020 - Present", "2018-present"
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    # ── 1. Explicit text patterns ──────────────────────────────────
+    explicit_years: list[float] = []
+
+    # "X years of experience" / "X+ years"
+    for m in re.finditer(r'(\d+)\+?\s*years?\s*(?:of)?\s*(?:experience|exp|expertise)', text_lower):
+        explicit_years.append(float(m.group(1)))
+
+    # "X-Y years of experience" → take the higher number
+    for m in re.finditer(r'(\d+)\s*[-–]\s*(\d+)\s*years?\s*(?:of)?\s*(?:experience|exp)', text_lower):
+        explicit_years.append(float(m.group(2)))
+
+    if explicit_years:
+        return max(explicit_years)
+
+    # ── 2. Month+Year date ranges (from EXPERIENCE section) ────────
+    # Use only the experience section to avoid counting education dates
+    exp_text = _extract_experience_section(text).lower()
+
+    month_range_pattern = (
+        r'(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*'
+        r'((?:19|20)\d{2})\s*'
+        r'[-–—]+\s*'
+        r'(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*'
+        r'((?:19|20)\d{2})|'
+        r'(present|current|till\s*date|to\s*date|ongoing))'
+    )
+    total_months = 0
+    range_matches = list(re.finditer(month_range_pattern, exp_text))
+
+    if range_matches:
+        for m in range_matches:
+            start_month = _parse_month(m.group(1))
+            start_year = int(m.group(2))
+
+            if m.group(5):  # "present" / "current"
+                end_month = current_month
+                end_year = current_year
+            else:
+                end_month = _parse_month(m.group(3))
+                end_year = int(m.group(4))
+
+            # Calculate duration in months
+            duration = (end_year - start_year) * 12 + (end_month - start_month)
+            if duration > 0:
+                total_months += duration
+
+        if total_months > 0:
+            return round(total_months / 12, 1)
+
+    # ── 3. Year-only fallback ──────────────────────────────────────
     year_pattern = r'\b((?:19|20)\d{2})\b'
-    year_matches = re.findall(year_pattern, text)
-    
-    # Check for "Present" or "Current" to include current year
-    if re.search(r'\b(present|current|till date|to date|ongoing)\b', text_lower):
-        year_matches.append(str(current_year))
-    
-    if len(year_matches) >= 2:
-        # Calculate experience from date ranges
-        years_found = list(set([int(y) for y in year_matches]))  # Unique years
-        years_found.sort()
-        
-        if years_found:
-            max_year = max(years_found)
-            min_year = min(years_found)
-            
-            # If max year is in the future, cap it at current year
-            if max_year > current_year:
-                max_year = current_year
-            
-            calculated_exp = max_year - min_year
-            if 0 < calculated_exp < 50:  # Sanity check
-                years.append(calculated_exp)
-    
-    # Pattern 4: Month-Year to Month-Year format
-    # "Jan 2019 - Dec 2022", "January 2020 - Present"
-    date_range_pattern = r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(20\d{2})\s*[-–]\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?(20\d{2}|present|current)'
-    date_ranges = re.findall(date_range_pattern, text_lower)
-    for start_year, end in date_ranges:
-        end_year = current_year if end in ['present', 'current'] else int(end)
-        exp = end_year - int(start_year)
-        if 0 < exp < 50:
-            years.append(exp)
-    
-    # Return maximum years found (most likely to be total experience)
-    if years:
-        return float(max(years))
-    
-    # Default to 0 if no experience found
+    year_strs = re.findall(year_pattern, exp_text)
+    if re.search(r'\b(present|current|till\s*date|to\s*date|ongoing)\b', exp_text):
+        year_strs.append(str(current_year))
+
+    if len(year_strs) >= 2:
+        unique_years = sorted(set(int(y) for y in year_strs))
+        span = min(unique_years[-1], current_year) - unique_years[0]
+        if 0 < span < 50:
+            return float(span)
+
     return 0.0
 
 

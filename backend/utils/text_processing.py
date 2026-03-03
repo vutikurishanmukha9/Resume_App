@@ -6,7 +6,7 @@ Handles file validation, PDF/TXT text extraction, and temporary file management.
 
 import os
 import logging
-import PyPDF2
+import pdfplumber
 from contextlib import contextmanager
 
 from backend.config import MAX_TEXT_LENGTH, MAX_PDF_PAGES, MIN_TEXT_LENGTH, ALLOWED_EXTENSIONS
@@ -34,32 +34,38 @@ def allowed_file(filename: str) -> bool:
 
 
 def extract_text_from_pdf(file_path: str) -> str:
-    """Extract text from PDF file with error handling"""
+    """
+    Extract text from PDF file using pdfplumber.
+    Handles multi-column layouts and complex formatting better than PyPDF2.
+    """
     try:
         text = ""
-        with open(file_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            num_pages = min(len(reader.pages), MAX_PDF_PAGES)
-            
+        with pdfplumber.open(file_path) as pdf:
+            num_pages = min(len(pdf.pages), MAX_PDF_PAGES)
+
             for i in range(num_pages):
                 try:
-                    content = reader.pages[i].extract_text()
+                    page = pdf.pages[i]
+                    content = page.extract_text(
+                        x_tolerance=3,
+                        y_tolerance=3,
+                    )
                     if content:
                         text += content + "\n"
                 except Exception as e:
                     logger.warning(f"Failed to extract text from page {i+1}: {e}")
                     continue
-        
+
         extracted = text.strip()[:MAX_TEXT_LENGTH]
-        
+
         if len(extracted) < MIN_TEXT_LENGTH:
             raise ValueError("Insufficient text extracted from PDF. Please ensure the PDF contains readable text.")
-        
+
         return extracted
-        
-    except PyPDF2.errors.PdfReadError as e:
-        raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
+
     except Exception as e:
+        if "Insufficient text" in str(e):
+            raise
         raise ValueError(f"Failed to process PDF: {str(e)}")
 
 

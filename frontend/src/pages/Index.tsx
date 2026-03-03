@@ -22,7 +22,6 @@ const Index = () => {
 
     try {
       const analysisResult = await analyzeResume(file, jobDescription, analysisMode);
-      console.log("Analysis result:", JSON.stringify(analysisResult, null, 2));
 
       // Validate result has required fields
       if (!analysisResult || typeof analysisResult.atsScore !== 'number') {
