@@ -1,11 +1,3 @@
-"""
-AI Resume Analyzer - FastAPI Application Entry Point
-
-This is the main application module that creates the FastAPI app,
-configures middleware, registers routes, and sets up error handlers.
-In production, it also serves the React frontend build.
-"""
-
 import os
 import sys
 import logging

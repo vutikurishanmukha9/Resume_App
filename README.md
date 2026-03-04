@@ -1,6 +1,6 @@
 # AI Resume Analyzer
 
-An AI-powered web application that analyzes resumes, matches them with job descriptions, calculates ATS scores, and predicts the best-fit job titles using advanced NLP and machine learning techniques.
+An AI-powered web application that analyzes resumes, matches them with job descriptions, calculates ATS scores, and predicts best-fit job titles using NLP and machine learning.
 
 ---
 
@@ -8,60 +8,89 @@ An AI-powered web application that analyzes resumes, matches them with job descr
 
 ### Core Capabilities
 
-- **Resume Upload** - Supports PDF and TXT formats for easy resume submission
-- **Job Description Analysis** - Input any job description to check compatibility with detailed breakdowns
-- **AI-Powered Matching** - Uses state-of-the-art NLP models for:
-  - Predicted job title that best fits your profile
-  - Skill match percentage between your resume and the JD
-- **ATS Score Analysis** - Comprehensive Applicant Tracking System scoring with:
-  - Overall ATS compatibility score (0-100)
-  - Sub-scores for keywords, skills, experience, and education
+- **Resume Upload** — PDF and TXT formats, parsed in-memory (no disk writes)
+- **Job Description Analysis** — Input any JD to check compatibility with detailed breakdowns
+- **Unified Analysis** — Single `/analyze-full` endpoint: one upload, one parse, all results
+- **AI-Powered Matching** — Sentence Transformers for:
+  - Predicted job title
+  - Semantic similarity scoring
+  - Contextual sentence-level matching (skips contact info / headers)
+- **ATS Score Analysis** — Comprehensive scoring with:
+  - Overall ATS compatibility score (0–100)
+  - Sub-scores for keywords, skills, experience, education, and formatting
   - Quick Scan and Deep Analysis modes
-  - Matched and missing keywords identification
+  - Negation-aware keyword classification ("NOT required" handled correctly)
+  - Matched/missing keywords identification
   - Actionable improvement suggestions
-- **Light/Dark Theme** - Toggle between dark and light modes with theme persistence
-- **Modern UI/UX** - Features glassmorphism effects, smooth animations, custom scrollbars, and responsive design
-- **Real-Time Analysis** - Receive instantaneous results upon submission without page reloads
+- **Salary Prediction** — Role-adjusted salary estimates based on experience, education, seniority, and skills
+- **Light/Dark Theme** — Toggle with persistence
+- **Modern UI/UX** — Glassmorphism, smooth animations, responsive design
 
 ### Advanced Features
 
-- **Skills Extraction** - Detects 200+ technical skills across 13 categories with intelligent variation handling (e.g., "Node" to "Node.js", "K8s" to "Kubernetes")
-- **Missing Keywords Detection** - Identifies keywords from job descriptions that are missing from your resume, ranked by importance:
-  - Critical (High Priority)
-  - Important (Medium Priority)
-  - Optional (Low Priority)
-- **Actionable Recommendations** - Provides specific suggestions on which keywords and skills to add
-- **Skills Breakdown** - Categorized view of matched vs. missing skills by technology domain
-- **Achievement Detection** - Identifies quantifiable achievements in your resume
-- **Experience Analysis** - Extracts and analyzes years of experience
-- **Education Detection** - Identifies education level (Bachelor's, Master's, PhD)
-- **Analytics Tracking** - Logs usage patterns and model performance for continuous improvement
-- **Rate Limiting** - Prevents abuse with request throttling protection
+- **Skills Extraction** — 200+ technical skills across 13 categories with variation handling (e.g., "K8s" → "Kubernetes")
+- **Missing Keywords Detection** — Ranked by importance (Critical / Important / Optional)
+- **Achievement Detection** — Identifies quantifiable achievements with proximity-based verb-metric matching
+- **Experience Analysis** — Section-aware month-level date parsing
+- **Education Detection** — False-positive-resistant (handles "Scrum Master", "Mastered Python" correctly)
+- **Expanded Job Ontology** — 22 categories across Tech, Healthcare, Finance, Engineering, Design, HR, and more
+- **Rate Limiting** — Request throttling protection
+- **Analytics Tracking** — Usage pattern logging
 
 ---
 
-## Screenshots
+## Architecture
 
-### Dark Mode (Default)
-The application features a sleek dark theme with gradient accents and glassmorphism effects.
+```
+┌─────────────────────────────────────────────────────────┐
+│  React Frontend (Vite + TypeScript + Tailwind)          │
+│  Single API call to /analyze-full                       │
+└──────────────────────┬──────────────────────────────────┘
+                       │ POST (file + JD)
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│  FastAPI Backend                                        │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ read_upload   │  │ extract_text │  │ run_in_      │  │
+│  │ _bytes()     │→ │ _from_bytes()│→ │ threadpool() │  │
+│  │ (chunked,    │  │ (BytesIO,    │  │ (non-blocking│  │
+│  │  16MB limit) │  │  pdfplumber) │  │  CPU work)   │  │
+│  └──────────────┘  └──────────────┘  └──────┬───────┘  │
+│                                              │          │
+│                    ┌─────────────────────────┐│          │
+│                    │ _run_full_analysis()    ││          │
+│                    │ ├─ analyze_resume()     ││          │
+│                    │ ├─ calculate_jd_match() ││          │
+│                    │ └─ ATSScorer.score()    ││          │
+│                    └─────────────────────────┘│          │
+└─────────────────────────────────────────────────────────┘
+```
 
-### Light Mode
-A clean, professional light theme with soft colors and pleasant aesthetics.
+### Key Design Decisions
 
-### ATS Score Analysis
-Comprehensive ATS scoring with detailed breakdown of sub-scores, matched keywords, and improvement suggestions.
+| Decision | Rationale |
+|:---------|:----------|
+| **In-memory parsing (BytesIO)** | No temp files → cloud-ready (Lambda, Heroku, Render) |
+| **Unified endpoint** | 1 upload instead of 3 → 66% less bandwidth/CPU |
+| **run_in_threadpool** | Non-blocking async for CPU-bound ML inference |
+| **Synchronous model loading** | No 503 race condition — server is ready before accepting traffic |
+| **Role-adjusted salary** | Job category multiplier applied after base prediction |
+| **Substantive sentence filter** | Contextual similarity skips contact info and "About Us" headers |
+| **Custom exception hierarchy** | Clean error propagation instead of string-matching error messages |
 
 ---
 
 ## Technology Stack
 
-| Category | Technologies | Description |
-|:---------|:-------------|:------------|
-| Backend | FastAPI (Python) | High-performance asynchronous web framework for the REST API |
-| Frontend | React, Vite, Tailwind CSS, TypeScript, Lucide React | Modern decoupled Single-Page Application (SPA) architecture |
-| AI/NLP Models | Sentence Transformers, Scikit-learn | Text embedding, similarity, and job title prediction |
-| Libraries | PyPDF2, NumPy, Pandas, Joblib, SlowAPI, FastAPI-CORS | PDF parsing, data manipulation, model serialization, rate limiting |
-| Deployment | Render, Railway, Docker | Cloud deployment with containerization support |
+| Category | Technologies |
+|:---------|:-------------|
+| Backend | FastAPI, Python 3.10, Uvicorn |
+| Frontend | React, Vite, TypeScript, Tailwind CSS, Lucide React |
+| AI/NLP | Sentence Transformers (all-MiniLM-L6-v2), Scikit-learn |
+| PDF Parsing | pdfplumber (in-memory via BytesIO) |
+| Libraries | NumPy, Pandas, Joblib, SlowAPI |
+| Deployment | Docker, Render, Railway, Nixpacks |
 
 ---
 
@@ -69,96 +98,74 @@ Comprehensive ATS scoring with detailed breakdown of sub-scores, matched keyword
 
 ```
 Resume_App/
-├── backend/                    # Python backend directory
-│   ├── main.py                 # Main FastAPI application
+├── backend/
+│   ├── main.py                 # FastAPI app, lifespan, error handlers
 │   ├── config.py               # Configuration settings
-│   ├── exceptions.py           # Custom exception handlers
-│   ├── rate_limiter.py         # Rate limiting configuration
-│   ├── services/               # Business logic modules
-│   │   ├── model_manager.py    # ML model loading and management
-│   │   ├── ats_scorer.py       # ATS scoring engine
-│   │   └── ...                 
-│   ├── routes/                 # API endpoint routers
-│   └── utils/                  # Utility functions
+│   ├── exceptions.py           # Custom exception hierarchy
+│   ├── rate_limiter.py         # Rate limiting config
+│   ├── services/
+│   │   ├── model_manager.py    # ML model loading (synchronous)
+│   │   ├── analysis.py         # Resume analysis, JD matching, salary prediction
+│   │   ├── ats_scorer.py       # ATS scoring engine (22 job categories)
+│   │   └── analytics.py        # Usage analytics
+│   ├── routes/
+│   │   ├── analyze.py          # /analyze-full — unified endpoint
+│   │   ├── upload.py           # /upload — resume analysis
+│   │   ├── ats.py              # /ats_score — ATS scoring
+│   │   ├── match.py            # /match_jd_resume — JD matching
+│   │   └── general.py          # /health, /ready
+│   └── utils/
+│       ├── text_processing.py  # BytesIO extraction, chunked upload
+│       ├── feature_extractor.py# Experience, education, seniority extraction
+│       ├── keyword_extractor.py# Keyword extraction and overlap
+│       └── skill_extractor.py  # 200+ skills across 13 categories
 │
-├── frontend/                   # React frontend application
-│   ├── src/                    # Components & application logic
-│   │   ├── components/         # React components (e.g., SkillsBreakdown)
+├── frontend/
+│   ├── src/
+│   │   ├── components/         # React UI components
 │   │   ├── hooks/              # Custom React hooks
-│   │   └── ...
-│   ├── public/                 # Static assets
-│   ├── package.json            # Node & npm configurations
-│   ├── vite.config.ts          # Vite bundler config
-│   └── tailwind.config.ts      # Tailwind styling configuration
+│   │   └── lib/
+│   │       ├── api.ts          # Single /analyze-full API call
+│   │       └── types.ts        # TypeScript interfaces
+│   ├── package.json
+│   └── vite.config.ts
 │
-├── models/                     # Machine learning models
-│   ├── job_classifier.pkl      # Trained model for job prediction
-│   ├── resume_classifier.pkl   # Resume classification model
-│   ├── tfidf_vectorizer.pkl    # TF-IDF vectorizer
-│   └── job_embeddings_cache.pkl # Precomputed embeddings cache
-│
-├── data/                       # Data files
-│   ├── job_title_des.csv       # Job titles and descriptions dataset
-│   ├── skills_taxonomy.json    # Skills database (200+ skills)
-│   └── analytics.json          # Usage analytics data
-│
-├── uploads/                    # Temporary storage for uploaded resumes
-├── run.py                      # Application entry point
+├── models/                     # ML models (.pkl files)
+├── data/                       # Job dataset, skills taxonomy, analytics
+├── Dockerfile                  # Multi-stage build (Node + Python)
+├── render.yaml                 # Render deployment config
+├── railway.json                # Railway deployment config
+├── nixpacks.toml               # Nixpacks config (Railway fallback)
+├── Procfile                    # Process file for cloud platforms
 ├── requirements.txt            # Python dependencies
-├── Dockerfile                  # Container build instructions
-├── Procfile                    # Process file for cloud deployment
-├── render.yaml                 # Render deployment configuration
-├── railway.json                # Railway deployment configuration
-└── README.md
+└── run.py                      # Development entry point
 ```
 
 ---
 
-## Local Development Setup
+## Local Development
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- pip package manager
+- Python 3.10+
+- Node.js 18+
+- pip
 
-### Installation
+### Setup
 
-1. **Clone the Repository**
+1. **Clone and set up backend**
 
 ```bash
 git clone https://github.com/vutikurishanmukha9/Resume_App.git
 cd Resume_App
-```
-
-2. **Create Virtual Environment**
-
-Windows:
-```bash
 python -m venv venv
-venv\Scripts\activate
-```
-
-macOS/Linux:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-3. **Install Dependencies**
-
-```bash
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
-```
-
-4. **Start the Backend Server**
-
-```bash
 python run.py
 ```
 
-5. **Start the Frontend Application**
-
-Open a new terminal, navigate to the frontend directory, install dependencies, and start the development server:
+2. **Start the frontend** (new terminal)
 
 ```bash
 cd frontend
@@ -166,82 +173,7 @@ npm install
 npm run dev
 ```
 
-6. **Access the Application**
-
-Open your browser and navigate to the frontend URL (typically `http://localhost:5173/`). The backend will be running at `http://localhost:5000/`.
-
----
-
-## How It Works
-
-### Analysis Pipeline
-
-1. **Input** - User uploads a resume (PDF or TXT) and optionally provides a job description
-2. **Extraction** - Text is extracted using PyPDF2 (for PDFs) or standard text reading
-3. **Feature Extraction** - The system extracts key features from the resume:
-   - Years of experience (from text patterns and date ranges)
-   - Education level (Bachelor's, Master's, PhD)
-   - Seniority level (Entry, Mid, Senior, Lead)
-   - Technical skills (200+ skills across 13 categories)
-   - Quantifiable achievements
-4. **Embedding** - The Sentence Transformer model converts text into numerical vector embeddings
-5. **Matching** - Cosine similarity is calculated to determine the skill match percentage
-6. **Prediction** - A trained ML model predicts the best-fit job title
-7. **ATS Scoring** - Comprehensive ATS compatibility analysis with weighted scoring
-8. **Insights** - The system provides detailed breakdowns, missing keywords, and suggestions
-
-### ATS Scoring System
-
-The ATS Scorer analyzes resumes against job descriptions using multiple factors:
-
-| Component | Weight | Description |
-|:----------|:-------|:------------|
-| Keywords Match | 35% | Presence of required and preferred keywords |
-| Skills Match | 25% | Technical skills alignment with requirements |
-| Experience Match | 20% | Years of experience vs. requirements |
-| Education Match | 10% | Education level alignment |
-| Formatting | 10% | Resume structure and section detection |
-
-**Analysis Modes:**
-- **Quick Scan** - Fast keyword-based analysis for rapid feedback
-- **Deep Analysis** - Comprehensive analysis including semantic matching, achievement detection, and detailed recommendations
-
-### Skills Taxonomy
-
-The application uses a comprehensive skills taxonomy with 200+ technical skills organized into 13 categories:
-
-- Programming Languages (Python, Java, JavaScript, C++, etc.)
-- Web Frameworks (React, Angular, Node.js, Django, etc.)
-- Databases (MySQL, PostgreSQL, MongoDB, Redis, etc.)
-- Cloud Platforms (AWS, Azure, GCP)
-- DevOps Tools (Docker, Kubernetes, Jenkins, Terraform, etc.)
-- Data Science and ML (TensorFlow, PyTorch, Scikit-learn, etc.)
-- Mobile Development (React Native, Flutter, Swift, Kotlin)
-- Testing Frameworks (Jest, Pytest, Selenium, etc.)
-- Methodologies (Agile, Scrum, DevOps, CI/CD)
-
-Each skill supports multiple variations for robust detection.
-
----
-
-## Deployment
-
-### Render
-
-The application includes a `render.yaml` blueprint for one-click deployment on Render.com.
-
-### Railway
-
-Configuration files `railway.json` and `nixpacks.toml` are included for Railway deployment.
-
-### Docker
-
-Build and run using Docker:
-
-```bash
-docker build -t resume-analyzer .
-docker run -p 5000:5000 resume-analyzer
-```
+3. **Open the app** at `http://localhost:5173/` (backend at `http://localhost:5000/`)
 
 ---
 
@@ -249,54 +181,94 @@ docker run -p 5000:5000 resume-analyzer
 
 | Endpoint | Method | Description |
 |:---------|:-------|:------------|
-| `/` | GET | Main application interface |
-| `/upload` | POST | Upload and analyze resume |
-| `/match_jd_resume` | POST | Match resume with job description |
-| `/ats_score` | POST | Calculate ATS score for resume against JD |
-| `/health` | GET | Health check endpoint |
+| `/analyze-full` | POST | **Unified** — upload once, get all results (recommended) |
+| `/upload` | POST | Resume analysis only (job prediction, salary) |
+| `/match_jd_resume` | POST | JD-resume match with skills breakdown |
+| `/ats_score` | POST | ATS score with keyword/achievement analysis |
+| `/health` | GET | Health check |
 | `/ready` | GET | Model readiness check |
 
+### `/analyze-full` Request
+
+```
+POST /analyze-full
+Content-Type: multipart/form-data
+
+resume: <file>
+jd_text: <string>
+jd_title: <string> (optional)
+mode: "quick" | "deep" (default: "deep")
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "upload": { "predicted_job": "...", "salary": "...", ... },
+  "ats": { "ats_score": 72, "sub_scores": {...}, ... },
+  "jd_match": { "match_percentage": 68.5, "component_scores": {...}, ... }
+}
+```
+
 ---
 
-## Rate Limiting
+## ATS Scoring System
 
-To ensure fair usage, the application implements rate limiting:
+| Component | Weight | Description |
+|:----------|:-------|:------------|
+| Keywords Match | 35% | Required/preferred keywords with negation detection |
+| Skills Match | 25% | Technical skills alignment across 13 categories |
+| Experience Match | 20% | Years of experience vs. requirements |
+| Education Match | 10% | Education level with false-positive resistance |
+| Formatting | 10% | Resume structure and section detection |
 
-- 10 requests per minute per endpoint
-- 50 requests per hour (default)
-- 200 requests per day (default)
-
-When limits are exceeded, users receive a friendly error message with retry information.
+**Modes:** Quick Scan (keyword-based) · Deep Analysis (semantic + achievements + detailed recommendations)
 
 ---
 
-## Theme Customization
+## Deployment
 
-The application supports two themes:
+### Docker
 
-- **Dark Mode** (Default) - Sleek dark theme with gradient accents, custom scrollbars, and glassmorphism effects
-- **Light Mode** - Clean, professional light theme with soft colors and pleasant aesthetics
+```bash
+docker build -t resume-analyzer .
+docker run -p 7860:7860 resume-analyzer
+```
 
-Theme preference is automatically saved and persists across browser sessions.
+### Render
+
+Includes `render.yaml` blueprint for one-click deployment.
+
+### Railway
+
+Includes `railway.json` and `nixpacks.toml` for Railway deployment.
+
+### Production Notes
+
+- Uses single worker (`--workers 1`) to avoid duplicating ML models in memory
+- Models load synchronously at startup — container is not ready until models are loaded
+- Use `/ready` endpoint for container health checks (not `/health`)
+- No disk writes — fully stateless, works on ephemeral filesystems
 
 ---
 
 ## Author
 
 **Vutikuri Shanmukha**
-
 B.Tech in Electronics and Communication Engineering
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
 ## Acknowledgements
 
-- Sentence Transformers Team for the NLP models
-- FastAPI Community for the web framework
-- Scikit-learn Contributors for the ML library
+- [Sentence Transformers](https://www.sbert.net/) for NLP models
+- [FastAPI](https://fastapi.tiangolo.com/) for the web framework
+- [pdfplumber](https://github.com/jsvine/pdfplumber) for PDF text extraction
+- [Scikit-learn](https://scikit-learn.org/) for ML models
