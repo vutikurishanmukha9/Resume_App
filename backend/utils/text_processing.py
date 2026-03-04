@@ -33,6 +33,42 @@ def allowed_file(filename: str) -> bool:
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+MAX_UPLOAD_BYTES = 16 * 1024 * 1024  # 16 MB hard limit
+
+
+async def save_upload_safely(upload_file, dest_path: str) -> None:
+    """
+    Save an uploaded file to disk in chunks with a hard size limit.
+    
+    Reads in 8 KB chunks and aborts immediately if the file exceeds
+    MAX_UPLOAD_BYTES.  This prevents OOM when many users upload
+    large PDFs concurrently.
+    
+    Raises:
+        ValueError: if the file exceeds the size limit.
+    """
+    chunk_size = 8 * 1024  # 8 KB
+    bytes_written = 0
+    with open(dest_path, 'wb') as f:
+        while True:
+            chunk = await upload_file.read(chunk_size)
+            if not chunk:
+                break
+            bytes_written += len(chunk)
+            if bytes_written > MAX_UPLOAD_BYTES:
+                # Clean up the partial file
+                f.close()
+                try:
+                    os.remove(dest_path)
+                except OSError:
+                    pass
+                raise ValueError(
+                    f'File too large ({bytes_written // (1024*1024)}+ MB). '
+                    f'Maximum allowed size is {MAX_UPLOAD_BYTES // (1024*1024)} MB.'
+                )
+            f.write(chunk)
+
+
 def extract_text_from_pdf(file_path: str) -> str:
     """
     Extract text from PDF file using pdfplumber.

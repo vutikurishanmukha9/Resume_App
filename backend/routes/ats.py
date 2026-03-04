@@ -20,7 +20,8 @@ from backend.services.analytics import track_analysis
 from backend.utils.text_processing import (
     allowed_file,
     temporary_file,
-    extract_text_from_file
+    extract_text_from_file,
+    save_upload_safely
 )
 from backend.utils.keyword_extractor import extract_keywords
 from backend.utils.skill_extractor import extract_skills, get_all_skills_flat
@@ -74,10 +75,8 @@ async def calculate_ats_score_endpoint(
         file_path = os.path.join(UPLOAD_FOLDER, filename)
 
         with temporary_file(file_path):
-            # Save uploaded file
-            content = await resume.read()
-            with open(file_path, 'wb') as f:
-                f.write(content)
+            # Save uploaded file in chunks with size limit
+            await save_upload_safely(resume, file_path)
             
             # Extract text
             resume_text = extract_text_from_file(file_path, filename)
@@ -133,7 +132,20 @@ async def calculate_ats_score_endpoint(
     except ValueError as e:
         logger.warning(f"Validation error in ATS score: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+    except (OSError, IOError) as e:
+        logger.error(f"File processing error: {e}")
+        raise HTTPException(
+            status_code=422,
+            detail='Could not read the uploaded file. It may be corrupted, password-protected, or in an unsupported format.'
+        )
     except Exception as e:
         logger.error(f"ATS Score Error: {e}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail='Failed to calculate ATS score. Please try again.')
+        error_msg = str(e).lower()
+        if 'pdf' in error_msg or 'extract' in error_msg or 'parse' in error_msg:
+            detail = 'Failed to parse the resume file. Please ensure it is a valid, non-corrupted PDF or TXT file.'
+        elif 'encode' in error_msg or 'model' in error_msg or 'embed' in error_msg:
+            detail = 'The analysis engine encountered an error. Please try again in a moment.'
+        else:
+            detail = 'Failed to calculate ATS score. Please try again.'
+        raise HTTPException(status_code=500, detail=detail)

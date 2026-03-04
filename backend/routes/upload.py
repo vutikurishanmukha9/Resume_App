@@ -18,7 +18,8 @@ from backend.services.analytics import track_analysis
 from backend.utils.text_processing import (
     allowed_file,
     temporary_file,
-    extract_text_from_file
+    extract_text_from_file,
+    save_upload_safely
 )
 
 logger = logging.getLogger(__name__)
@@ -51,10 +52,8 @@ async def upload_resume(request: Request, resume: UploadFile = File(...)):
 
         # Process file
         with temporary_file(file_path):
-            # Save uploaded file
-            content = await resume.read()
-            with open(file_path, 'wb') as f:
-                f.write(content)
+            # Save uploaded file in chunks with size limit
+            await save_upload_safely(resume, file_path)
             
             # Extract text
             resume_text = extract_text_from_file(file_path, filename)
@@ -82,7 +81,20 @@ async def upload_resume(request: Request, resume: UploadFile = File(...)):
     except ValueError as e:
         logger.warning(f"Validation error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+    except (OSError, IOError) as e:
+        logger.error(f"File processing error: {e}")
+        raise HTTPException(
+            status_code=422,
+            detail='Could not read the uploaded file. It may be corrupted, password-protected, or in an unsupported format.'
+        )
     except Exception as e:
         logger.error(f"Upload error: {e}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail='An unexpected error occurred. Please try again.')
+        error_msg = str(e).lower()
+        if 'pdf' in error_msg or 'extract' in error_msg or 'parse' in error_msg:
+            detail = 'Failed to parse the resume file. Please ensure it is a valid, non-corrupted PDF or TXT file.'
+        elif 'encode' in error_msg or 'model' in error_msg or 'embed' in error_msg:
+            detail = 'The analysis engine encountered an error. Please try again in a moment.'
+        else:
+            detail = 'An unexpected error occurred. Please try again.'
+        raise HTTPException(status_code=500, detail=detail)

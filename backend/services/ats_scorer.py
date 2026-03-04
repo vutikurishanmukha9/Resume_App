@@ -29,6 +29,7 @@ SECTION_PENALTIES = {
 
 # Job title ontology for fuzzy matching
 TITLE_ONTOLOGY = {
+    # ── Tech / Software ──
     'software_engineer': [
         'software engineer', 'swe', 'software developer', 'developer',
         'programmer', 'software dev', 'application developer'
@@ -47,7 +48,8 @@ TITLE_ONTOLOGY = {
     ],
     'data_scientist': [
         'data scientist', 'ml engineer', 'machine learning engineer',
-        'ai engineer', 'data science engineer', 'applied scientist'
+        'ai engineer', 'data science engineer', 'applied scientist',
+        'ai solutions engineer'
     ],
     'data_engineer': [
         'data engineer', 'etl developer', 'data pipeline engineer',
@@ -68,7 +70,68 @@ TITLE_ONTOLOGY = {
     'qa_engineer': [
         'qa engineer', 'test engineer', 'quality assurance engineer',
         'sdet', 'automation engineer', 'test automation engineer'
-    ]
+    ],
+    # ── Design / Creative ──
+    'designer': [
+        'ui/ux designer', 'ux designer', 'ui designer', 'product designer',
+        'graphic designer', 'visual designer', 'interaction designer',
+        'web designer'
+    ],
+    # ── Finance / Business ──
+    'financial_analyst': [
+        'financial analyst', 'finance analyst', 'investment analyst',
+        'risk analyst', 'credit analyst', 'equity analyst',
+        'portfolio analyst', 'treasury analyst'
+    ],
+    'accountant': [
+        'accountant', 'cpa', 'auditor', 'tax analyst',
+        'accounts payable', 'accounts receivable', 'bookkeeper'
+    ],
+    'consultant': [
+        'consultant', 'management consultant', 'strategy consultant',
+        'associate consultant', 'advisory', 'solutions consultant'
+    ],
+    # ── Healthcare ──
+    'nurse': [
+        'registered nurse', 'rn', 'nurse practitioner', 'clinical nurse',
+        'staff nurse', 'charge nurse', 'lpn', 'nursing'
+    ],
+    'healthcare': [
+        'physician', 'doctor', 'pharmacist', 'therapist',
+        'medical assistant', 'healthcare administrator', 'clinical researcher'
+    ],
+    # ── Engineering (non-software) ──
+    'mechanical_engineer': [
+        'mechanical engineer', 'design engineer', 'manufacturing engineer',
+        'process engineer', 'industrial engineer', 'quality engineer'
+    ],
+    'electrical_engineer': [
+        'electrical engineer', 'electronics engineer', 'embedded engineer',
+        'hardware engineer', 'control systems engineer', 'power engineer'
+    ],
+    'civil_engineer': [
+        'civil engineer', 'structural engineer', 'construction engineer',
+        'environmental engineer', 'geotechnical engineer', 'site engineer'
+    ],
+    # ── Marketing / Sales ──
+    'marketing': [
+        'marketing manager', 'digital marketing', 'seo specialist',
+        'content strategist', 'brand manager', 'growth marketer',
+        'social media manager', 'marketing analyst'
+    ],
+    'sales': [
+        'sales representative', 'account executive', 'sales manager',
+        'business development', 'sales engineer', 'account manager'
+    ],
+    # ── HR / Operations ──
+    'hr': [
+        'hr manager', 'human resources', 'recruiter', 'talent acquisition',
+        'hr generalist', 'hr business partner', 'people operations'
+    ],
+    'project_manager': [
+        'project manager', 'program manager', 'scrum master',
+        'agile coach', 'delivery manager', 'technical project manager'
+    ],
 }
 
 # Seniority levels
@@ -79,13 +142,24 @@ SENIORITY_PATTERNS = {
     'entry': ['junior', 'jr', 'jr.', 'entry', 'associate', 'trainee', 'intern', 'fresher', 'graduate']
 }
 
-# Education levels
+# Education levels – use word-boundary patterns to avoid false positives
+# (e.g. "Scrum Master" or "Mastered Python" should NOT match 'master')
 EDUCATION_LEVELS = {
     'phd': ['phd', 'ph.d', 'doctorate', 'doctor of philosophy', 'doctoral'],
-    'masters': ['master', 'mba', 'm.s', 'm.tech', 'mtech', 'msc', 'm.sc', 'ms ', 'ma '],
-    'bachelors': ['bachelor', 'b.tech', 'btech', 'b.s', 'b.e', 'bsc', 'b.sc', 'ba ', 'bs '],
-    'diploma': ['diploma', 'associate', 'certification', 'certificate']
+    'masters': ["master's", "master of", 'mba', 'm.s.', 'm.s ', 'm.tech', 'mtech',
+                'msc', 'm.sc', 'ms in ', 'ma in ', 'postgraduate'],
+    'bachelors': ["bachelor's", "bachelor of", 'b.tech', 'btech', 'b.s.', 'b.s ',
+                  'b.e.', 'b.e ', 'bsc', 'b.sc', 'ba in ', 'bs in ',
+                  'undergraduate degree'],
+    'diploma': ['diploma in', 'associate degree', 'certification in', 'certificate in']
 }
+
+# Phrases that look like education keywords but aren't
+EDUCATION_FALSE_POSITIVES = [
+    'scrum master', 'master class', 'mastered', 'masters at',
+    'master of none', 'webmaster', 'postmaster', 'taskmaster',
+    'bachelor party',
+]
 
 # Keywords indicating requirement importance
 REQUIRED_INDICATORS = [
@@ -96,6 +170,13 @@ REQUIRED_INDICATORS = [
 PREFERRED_INDICATORS = [
     'preferred', 'nice to have', 'bonus', 'plus', 'advantageous',
     'would be great', 'ideally', 'desirable', 'good to have'
+]
+
+# Negation phrases that invert requirement meaning
+NEGATION_PHRASES = [
+    'not required', 'not essential', 'not mandatory', 'not necessary',
+    'no need', 'don\'t need', 'do not need',
+    'not a must', 'not a requirement', 'optional',
 ]
 
 # Action verbs for achievement detection
@@ -141,26 +222,24 @@ def extract_years_from_text(text: str) -> List[int]:
 def extract_experience_duration(text: str) -> Dict[str, Any]:
     """
     Extract experience duration from resume text.
-    Returns total years and skill-specific experience.
+    
+    Delegates to feature_extractor's robust implementation which
+    handles section isolation, month-level parsing, and explicit
+    experience statements, then adapts the result into the dict
+    format the ATS scorer expects.
     """
+    from backend.utils.feature_extractor import extract_years_of_experience
+    
+    total_years = extract_years_of_experience(text)
+    
     result = {
-        'total_years': 0,
+        'total_years': total_years,
         'skill_years': {},
         'date_ranges': []
     }
     
-    # Pattern: "X years experience" or "X+ years"
-    year_patterns = [
-        r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp)?',
-        r'(?:experience|exp)[\s:]+(\d+)\+?\s*(?:years?|yrs?)',
-    ]
-    
-    for pattern in year_patterns:
-        matches = re.findall(pattern, text.lower())
-        if matches:
-            result['total_years'] = max(result['total_years'], max(int(m) for m in matches))
-    
-    # Pattern: "Python (4 years)" or "5+ years of AWS"
+    # Supplement with skill-specific experience patterns
+    # (the feature extractor doesn't extract these)
     skill_year_patterns = [
         r'(\w+(?:\.\w+)?)\s*[\(\[]?\s*(\d+)\+?\s*(?:years?|yrs?)[\)\]]?',
         r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(\w+(?:\.\w+)?)',
@@ -174,40 +253,18 @@ def extract_experience_duration(text: str) -> Dict[str, Any]:
                     years, skill = int(match[0]), match[1]
                 else:
                     skill, years = match[0], int(match[1])
-                if len(skill) > 1:  # Avoid single letters
+                if len(skill) > 1 and years <= 50:  # sanity check
                     result['skill_years'][skill] = years
-    
-    # Date range patterns: "2020 - 2023" or "Jan 2020 - Present"
-    date_range_pattern = r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4})\s*[-–to]+\s*((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4}|present|current|now)'
-    date_matches = re.findall(date_range_pattern, text.lower())
-    
-    current_year = datetime.now().year
-    for start, end in date_matches:
-        try:
-            start_year = int(re.search(r'\d{4}', start).group())
-            if 'present' in end or 'current' in end or 'now' in end:
-                end_year = current_year
-            else:
-                end_year = int(re.search(r'\d{4}', end).group())
-            
-            if 1990 <= start_year <= current_year and start_year <= end_year:
-                result['date_ranges'].append((start_year, end_year))
-        except (ValueError, AttributeError):
-            pass
-    
-    # Calculate total years from date ranges if not already found
-    if result['date_ranges'] and result['total_years'] == 0:
-        # Sum up non-overlapping years
-        all_years = set()
-        for start, end in result['date_ranges']:
-            all_years.update(range(start, end + 1))
-        result['total_years'] = len(all_years)
     
     return result
 
 
 def detect_education_level(text: str) -> Dict[str, Any]:
-    """Detect highest education level from resume text."""
+    """Detect highest education level from resume text.
+    
+    Uses phrase-level matching to avoid false positives like
+    'Scrum Master' or 'Mastered Python' being detected as Master's degree.
+    """
     text_lower = normalize_text(text)
     
     result = {
@@ -216,16 +273,31 @@ def detect_education_level(text: str) -> Dict[str, Any]:
         'degrees_found': []
     }
     
+    # Check for false positives first
+    has_false_positive = {}
+    for fp in EDUCATION_FALSE_POSITIVES:
+        if fp in text_lower:
+            has_false_positive[fp] = True
+    
     level_scores = {'phd': 4, 'masters': 3, 'bachelors': 2, 'diploma': 1}
     
     for level, keywords in EDUCATION_LEVELS.items():
         for keyword in keywords:
             if keyword in text_lower:
-                result['degrees_found'].append(level)
-                if level_scores.get(level, 0) > result['level_score']:
-                    result['highest_level'] = level
-                    result['level_score'] = level_scores[level]
-                break
+                # Verify it's not a false positive
+                is_false = False
+                for fp in has_false_positive:
+                    # e.g. 'master' matches inside 'scrum master'
+                    if keyword.rstrip("'s").rstrip(' of').rstrip(' in') in fp:
+                        is_false = True
+                        break
+                
+                if not is_false:
+                    result['degrees_found'].append(level)
+                    if level_scores.get(level, 0) > result['level_score']:
+                        result['highest_level'] = level
+                        result['level_score'] = level_scores[level]
+                    break
     
     return result
 
@@ -298,7 +370,11 @@ def detect_resume_sections(text: str) -> Dict[str, str]:
 def extract_achievements(text: str) -> List[Dict[str, Any]]:
     """
     Extract quantified achievements from text.
-    Looks for action verbs combined with metrics.
+    
+    Tightened rules:
+    - Action verb must START the sentence/clause (not just appear anywhere)
+    - Metric must be within 80 chars of the verb (same clause)
+    - Filters out generic number mentions like "team of 5"
     """
     achievements = []
     
@@ -307,25 +383,44 @@ def extract_achievements(text: str) -> List[Dict[str, Any]]:
     
     for sentence in sentences:
         sentence = sentence.strip()
-        if len(sentence) < 10:
+        if len(sentence) < 15:
             continue
         
-        sentence_lower = sentence.lower()
+        sentence_lower = sentence.lower().lstrip('- ')
         
-        # Check for action verbs
-        has_action_verb = any(verb in sentence_lower for verb in ACTION_VERBS)
+        # Action verb must START the sentence/clause
+        # (Verbs at the start indicate an achievement bullet, not a description)
+        leading_verb = None
+        for verb in ACTION_VERBS:
+            if sentence_lower.startswith(verb):
+                leading_verb = verb
+                break
         
-        # Check for metrics
+        if not leading_verb:
+            continue
+        
+        # Check for metrics NEAR the verb (within the same clause)
+        # This prevents "Optimized code" + "team of 5 people" false matches
+        clause = sentence_lower[:120]  # first 120 chars only
+        
         metrics = {
-            'percentage': bool(re.search(r'\d+\s*%', sentence)),
-            'currency': bool(re.search(r'[\$£€]\s*\d+|\d+\s*(?:k|m|million|thousand|lakh|crore)', sentence.lower())),
-            'number': bool(re.search(r'\b\d+\s*(?:users?|customers?|clients?|people|team|engineers?|developers?)\b', sentence.lower())),
-            'time': bool(re.search(r'\d+\s*(?:hours?|days?|weeks?|months?|x faster)', sentence.lower()))
+            'percentage': bool(re.search(r'\d+\s*%', clause)),
+            'currency': bool(re.search(r'[\$£€₹]\s*\d+|\d+\s*(?:k|m|million|thousand|lakh|crore)', clause)),
+            'number': bool(re.search(
+                r'\b\d+\+?\s*(?:users?|customers?|clients?|applications?|apis?|'
+                r'endpoints?|requests?|deployments?|projects?|microservices?|modules?)\b',
+                clause
+            )),
+            'time': bool(re.search(
+                r'\d+\s*(?:hours?|days?|weeks?|months?|x\s*faster|x\s*improvement)',
+                clause
+            )),
+            'multiplier': bool(re.search(r'\b\d+x\b', clause)),
         }
         
         has_metric = any(metrics.values())
         
-        if has_action_verb and has_metric:
+        if has_metric:
             achievements.append({
                 'text': sentence,
                 'metrics': [k for k, v in metrics.items() if v]
@@ -337,6 +432,8 @@ def extract_achievements(text: str) -> List[Dict[str, Any]]:
 def classify_jd_keywords(jd_text: str, all_keywords: List[str]) -> Dict[str, List[str]]:
     """
     Classify JD keywords as required, preferred, or standard.
+    
+    Includes negation detection: "not required" won't flag as required.
     """
     jd_lower = jd_text.lower()
     
@@ -355,8 +452,17 @@ def classify_jd_keywords(jd_text: str, all_keywords: List[str]) -> Dict[str, Lis
         
         for sentence in sentences:
             if keyword_lower in sentence:
-                # Check if sentence contains requirement indicators
-                if any(ind in sentence for ind in REQUIRED_INDICATORS):
+                # Check for negation first — "not required" should NOT
+                # flag the keyword as required
+                has_negation = any(neg in sentence for neg in NEGATION_PHRASES)
+                
+                if has_negation:
+                    # Negated requirement → treat as preferred at best
+                    if keyword not in result['preferred']:
+                        result['preferred'].append(keyword)
+                    classified = True
+                    break
+                elif any(ind in sentence for ind in REQUIRED_INDICATORS):
                     if keyword not in result['required']:
                         result['required'].append(keyword)
                     classified = True
@@ -376,6 +482,10 @@ def classify_jd_keywords(jd_text: str, all_keywords: List[str]) -> Dict[str, Lis
 def match_job_title(resume_text: str, jd_title: str) -> Dict[str, Any]:
     """
     Match resume job titles against JD title using ontology.
+    
+    Falls back gracefully for non-tech roles: if the JD title doesn't
+    match any ontology category, uses direct text matching with a
+    partial score instead of silently returning 0.
     """
     resume_lower = normalize_text(resume_text)
     jd_lower = normalize_text(jd_title)
@@ -402,8 +512,17 @@ def match_job_title(resume_text: str, jd_title: str) -> Dict[str, Any]:
                     result['matched_category'] = category
                     result['score'] = 100
                 elif result['score'] < 60:
-                    # Partial match for related categories
                     result['score'] = 60
+    
+    # Fallback: if JD title doesn't match any ontology category,
+    # do a direct text match so non-ontology roles aren't penalised to 0
+    if result['jd_category'] is None and jd_lower:
+        # Check if the raw JD title text appears anywhere in the resume
+        jd_words = [w for w in jd_lower.split() if len(w) > 2]
+        if jd_words:
+            matched_words = sum(1 for w in jd_words if w in resume_lower)
+            ratio = matched_words / len(jd_words)
+            result['score'] = max(result['score'], int(ratio * 80))
     
     return result
 
