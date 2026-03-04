@@ -201,6 +201,24 @@ SECTION_HEADERS = {
     'achievements': ['achievements', 'accomplishments', 'awards', 'honors']
 }
 
+# Field weights: keywords in experience bullets count more than in a plain skills list.
+# Real ATS systems apply this weighting — proof in context beats a keyword list.
+SECTION_KEYWORD_WEIGHT = {
+    'experience':     1.5,
+    'projects':       1.3,
+    'achievements':   1.3,
+    'summary':        1.2,
+    'certifications': 1.1,
+    'skills':         1.0,
+    'education':      0.8,
+    '_default':       0.7,   # keyword found but not in any detected section
+}
+
+# Stuffing detection thresholds
+MAX_KEYWORD_REPEATS = 5       # any single keyword appearing more than this is suspicious
+MAX_KEYWORD_DENSITY = 0.03    # total keyword tokens / total tokens > 3% is suspicious
+STUFFING_PENALTY = 15         # points deducted for detected stuffing
+
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -570,6 +588,113 @@ def calculate_formatting_penalty(text: str, sections: Dict[str, str]) -> Dict[st
     return penalties
 
 
+def detect_keyword_stuffing(resume_text: str, keywords: List[str]) -> Dict[str, Any]:
+    """
+    Detect keyword stuffing — abnormal repetition of JD keywords.
+    
+    Real ATS systems penalize resumes with artificially high keyword density.
+    Checks:
+      1. Any single keyword repeated > MAX_KEYWORD_REPEATS times
+      2. Total keyword density > MAX_KEYWORD_DENSITY of all tokens
+    """
+    result = {
+        'is_stuffed': False,
+        'penalty': 0,
+        'flagged_keywords': [],
+        'keyword_density': 0.0
+    }
+    
+    if not keywords or not resume_text:
+        return result
+    
+    text_lower = resume_text.lower()
+    total_tokens = len(text_lower.split())
+    if total_tokens == 0:
+        return result
+    
+    total_keyword_hits = 0
+    
+    for kw in keywords:
+        kw_lower = kw.lower()
+        count = text_lower.count(kw_lower)
+        total_keyword_hits += count
+        
+        if count > MAX_KEYWORD_REPEATS:
+            result['flagged_keywords'].append(f"{kw} (×{count})")
+    
+    result['keyword_density'] = round(total_keyword_hits / total_tokens, 4)
+    
+    if result['flagged_keywords'] or result['keyword_density'] > MAX_KEYWORD_DENSITY:
+        result['is_stuffed'] = True
+        result['penalty'] = STUFFING_PENALTY
+    
+    return result
+
+
+def calculate_recency_bonus(text: str) -> Dict[str, Any]:
+    """
+    Score recency of experience.
+    
+    Recent, continuous experience is valued by real ATS systems.
+    Bonus for activity within the last 2 years, penalty for large gaps.
+    """
+    current_year = datetime.now().year
+    years = extract_years_from_text(text)
+    
+    result = {
+        'bonus': 0,
+        'most_recent_year': None,
+        'gap_years': 0,
+        'details': ''
+    }
+    
+    if not years:
+        result['details'] = 'No dates found'
+        return result
+    
+    most_recent = max(years)
+    result['most_recent_year'] = most_recent
+    gap = current_year - most_recent
+    result['gap_years'] = gap
+    
+    if gap <= 1:
+        result['bonus'] = 5
+        result['details'] = 'Currently active or very recent experience'
+    elif gap <= 2:
+        result['bonus'] = 3
+        result['details'] = 'Recent experience (within 2 years)'
+    elif gap <= 4:
+        result['bonus'] = 0
+        result['details'] = 'Moderate gap in recent activity'
+    else:
+        result['bonus'] = -5
+        result['details'] = f'Experience appears stale ({gap}+ year gap)'
+    
+    return result
+
+
+def get_field_weight_for_keyword(keyword: str, sections: Dict[str, str]) -> float:
+    """
+    Determine how much weight a keyword gets based on WHERE it appears.
+    
+    Keywords in Experience bullets count 1.5×, in Skills 1.0×, etc.
+    If found in multiple sections, the highest weight wins.
+    """
+    kw_lower = keyword.lower()
+    best_weight = 0.0
+    
+    for section_name, section_text in sections.items():
+        if kw_lower in section_text.lower():
+            weight = SECTION_KEYWORD_WEIGHT.get(section_name, SECTION_KEYWORD_WEIGHT['_default'])
+            best_weight = max(best_weight, weight)
+    
+    # If found in resume but not in any detected section
+    if best_weight == 0.0:
+        best_weight = SECTION_KEYWORD_WEIGHT['_default']
+    
+    return best_weight
+
+
 # ==================== SCORE INTERPRETATION ====================
 
 def get_score_interpretation(score: int) -> Dict[str, str]:
@@ -761,9 +886,15 @@ class ATSScorer:
         self,
         resume_skills: List[str],
         jd_keywords: Dict[str, List[str]],
-        semantic_similarity: float = None
+        semantic_similarity: float = None,
+        sections: Dict[str, str] = None
     ) -> Dict[str, Any]:
-        """Calculate skill match score."""
+        """Calculate skill match score with field-weighting.
+        
+        Keywords found in Experience/Projects sections are weighted higher
+        than those in a plain Skills list. This mimics how real ATS systems
+        value proof-in-context over keyword dumping.
+        """
         resume_skills_lower = [s.lower() for s in resume_skills]
         
         matched = {
@@ -776,39 +907,53 @@ class ATSScorer:
             'important': [],
             'optional': []
         }
+        field_weights_sum = 0.0
+        field_weights_max = 0.0
         
         # Check required keywords (weight: 2x)
         for keyword in jd_keywords.get('required', []):
             if keyword.lower() in resume_skills_lower:
                 matched['required'].append(keyword)
+                if sections:
+                    field_weights_sum += get_field_weight_for_keyword(keyword, sections) * 2
+                else:
+                    field_weights_sum += 2.0
             else:
                 missing['critical'].append(keyword)
+            field_weights_max += 2.0 * SECTION_KEYWORD_WEIGHT.get('experience', 1.5)
         
         # Check preferred keywords (weight: 1x)
         for keyword in jd_keywords.get('preferred', []):
             if keyword.lower() in resume_skills_lower:
                 matched['preferred'].append(keyword)
+                if sections:
+                    field_weights_sum += get_field_weight_for_keyword(keyword, sections)
+                else:
+                    field_weights_sum += 1.0
             else:
                 missing['important'].append(keyword)
+            field_weights_max += SECTION_KEYWORD_WEIGHT.get('experience', 1.5)
         
         # Check standard keywords
         for keyword in jd_keywords.get('standard', []):
             if keyword.lower() in resume_skills_lower:
                 matched['standard'].append(keyword)
+                if sections:
+                    field_weights_sum += get_field_weight_for_keyword(keyword, sections) * 0.5
+                else:
+                    field_weights_sum += 0.5
             else:
                 missing['optional'].append(keyword)
+            field_weights_max += 0.5 * SECTION_KEYWORD_WEIGHT.get('experience', 1.5)
         
-        # Calculate score
-        total_required = len(jd_keywords.get('required', []))
-        total_preferred = len(jd_keywords.get('preferred', []))
-        total_standard = len(jd_keywords.get('standard', []))
-        
-        # Weighted score calculation
-        required_score = (len(matched['required']) / max(total_required, 1)) * 50
-        preferred_score = (len(matched['preferred']) / max(total_preferred, 1)) * 30
-        standard_score = (len(matched['standard']) / max(total_standard, 1)) * 20
-        
-        base_score = required_score + preferred_score + standard_score
+        # Field-weighted score (0-100)
+        if field_weights_max > 0:
+            base_score = (field_weights_sum / field_weights_max) * 100
+        else:
+            # Fallback: simple ratio
+            total = len(jd_keywords.get('required', [])) + len(jd_keywords.get('preferred', [])) + len(jd_keywords.get('standard', []))
+            matched_count = len(matched['required']) + len(matched['preferred']) + len(matched['standard'])
+            base_score = (matched_count / max(total, 1)) * 100
         
         # Add semantic similarity boost in deep mode
         if self.mode == "deep" and semantic_similarity is not None:
@@ -1020,9 +1165,21 @@ class ATSScorer:
         # Calculate formatting penalty
         formatting = calculate_formatting_penalty(resume_text, sections)
         
-        # Calculate sub-scores
+        # ── NEW: Keyword stuffing detection ──
+        all_kws = (
+            classified_keywords.get('required', []) +
+            classified_keywords.get('preferred', []) +
+            classified_keywords.get('standard', [])
+        )
+        stuffing = detect_keyword_stuffing(resume_text, all_kws)
+        
+        # ── NEW: Recency bonus ──
+        recency = calculate_recency_bonus(resume_text)
+        
+        # Calculate sub-scores (now with section-aware field-weighting)
         skill_result = self.calculate_skill_score(
-            resume_skills or [], classified_keywords, semantic_similarity
+            resume_skills or [], classified_keywords, semantic_similarity,
+            sections=sections
         )
         
         title_result = self.calculate_title_score(resume_text, jd_title)
@@ -1043,6 +1200,22 @@ class ATSScorer:
             self.weights['formatting_penalty'] * formatting['total']
         )
         
+        # ── NEW: Apply recency bonus/penalty ──
+        final_score += recency['bonus']
+        
+        # ── NEW: Apply stuffing penalty ──
+        if stuffing['is_stuffed']:
+            final_score -= stuffing['penalty']
+        
+        # ── NEW: Required keyword hard gate ──
+        # If more than half of required keywords are missing, cap score at 50.
+        # Real ATS systems reject or heavily down-rank resumes missing
+        # "must have" criteria.
+        total_required = len(classified_keywords.get('required', []))
+        missing_required = len(skill_result['missing'].get('critical', []))
+        if total_required > 0 and missing_required > (total_required / 2):
+            final_score = min(final_score, 50)
+        
         final_score = max(0, min(100, int(final_score)))
         
         # Generate dynamic suggestions with context
@@ -1057,6 +1230,20 @@ class ATSScorer:
             education_score=education_result['score'],
             matched_skills=skill_result['matched']
         )
+        
+        # Add stuffing warning if detected
+        if stuffing['is_stuffed']:
+            suggestions.insert(0, 
+                f"WARNING: Keyword stuffing detected ({', '.join(stuffing['flagged_keywords'][:3])}). "
+                f"Real ATS systems penalize excessive repetition."
+            )
+        
+        # Add recency suggestion if stale
+        if recency['bonus'] < 0:
+            suggestions.append(
+                f"Your most recent experience is from {recency['most_recent_year']}. "
+                f"Update with current or recent roles/projects."
+            )
         
         # Build matched keywords with importance
         matched_keywords = []
@@ -1077,20 +1264,27 @@ class ATSScorer:
                 'experience': experience_result['score'],
                 'achievement': achievement_result['score'],
                 'education': education_result['score'],
-                'formatting_penalty': formatting['total']
+                'formatting_penalty': formatting['total'],
+                'recency_bonus': recency['bonus'],
+                'stuffing_penalty': stuffing['penalty'] if stuffing['is_stuffed'] else 0,
             },
             'matched_keywords': matched_keywords,
             'missing_keywords': skill_result['missing'],
             'achievements_found': [a['text'] for a in achievement_result['achievements']],
             'experience_details': {
                 'total_years': experience_result['total_years'],
-                'skill_years': experience_result['skill_years']
+                'skill_years': experience_result['skill_years'],
+                'recency': recency['details'],
             },
             'education_details': {
                 'level': education_result['level'],
                 'degrees': education_result['degrees_found']
             },
             'sections_detected': list(sections.keys()),
+            'stuffing_detected': stuffing['is_stuffed'],
+            'required_gate_applied': (
+                total_required > 0 and missing_required > (total_required / 2)
+            ),
             'suggestions': suggestions
         }
 
