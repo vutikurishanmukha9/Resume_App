@@ -12,6 +12,7 @@ const ENDPOINTS = {
     UPLOAD: '/upload',
     MATCH: '/match_jd_resume',
     ATS_SCORE: '/ats_score',
+    ANALYZE_FULL: '/analyze-full',
     HEALTH: '/health',
     READY: '/ready',
 };
@@ -243,80 +244,57 @@ function transformJDMatchResponse(jdData: JDMatchResponse, uploadData?: UploadRe
 // ─── Public API functions ────────────────────────────────────────
 
 /**
- * Combined analysis: Upload resume + ATS score in one flow
+ * Combined analysis: single /analyze-full call
+ *
+ * Uploads the file ONCE; the backend parses it once and returns
+ * upload analysis + ATS score + JD match in a single response.
  */
 export async function analyzeResume(
     file: File,
     jobDescription: string,
     mode: 'quick' | 'deep' = 'deep'
 ): Promise<AnalysisResult> {
-    // Step 1: Upload and get basic analysis
-    const uploadFormData = new FormData();
-    uploadFormData.append('resume', file);
+    const formData = new FormData();
+    formData.append('resume', file);
+    formData.append('jd_text', jobDescription);
+    formData.append('mode', mode);
 
-    let uploadData: UploadResponse | undefined;
-    try {
-        const uploadRes = await fetch(ENDPOINTS.UPLOAD, {
-            method: 'POST',
-            body: uploadFormData,
-        });
-        const uploadJson = await uploadRes.json();
-        if (uploadRes.ok && uploadJson.success) {
-            uploadData = uploadJson;
-        }
-    } catch (e) {
-        console.warn('Upload analysis failed, continuing with ATS only:', e);
-    }
-
-    // Step 2: Get ATS score
-    const atsFormData = new FormData();
-    atsFormData.append('resume', file);
-    atsFormData.append('jd_text', jobDescription);
-    atsFormData.append('mode', mode);
-
-    const atsRes = await fetch(ENDPOINTS.ATS_SCORE, {
+    const res = await fetch(ENDPOINTS.ANALYZE_FULL, {
         method: 'POST',
-        body: atsFormData,
+        body: formData,
     });
 
-    if (!atsRes.ok) {
-        const errData = await atsRes.json().catch(() => ({}));
-        throw new Error(errData.detail || errData.error || `Server error (${atsRes.status})`);
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || errData.error || `Server error (${res.status})`);
     }
 
-    const atsData: ATSResponse = await atsRes.json();
-    if (!atsData.success) {
-        throw new Error(atsData.error || 'ATS analysis failed');
+    const data = await res.json();
+    if (!data.success) {
+        throw new Error('Analysis failed');
     }
 
-    // Step 3: Get JD match for additional data
-    const jdFormData = new FormData();
-    jdFormData.append('resume', file);
-    jdFormData.append('jd_text', jobDescription);
+    // Destructure the combined response
+    const uploadData: UploadResponse | undefined = data.upload?.success ? data.upload : undefined;
+    const atsData: ATSResponse | undefined = data.ats?.success ? data.ats : undefined;
+    const jdData: JDMatchResponse | undefined = data.jd_match?.success ? data.jd_match : undefined;
 
-    let jdData: JDMatchResponse | undefined;
-    try {
-        const jdRes = await fetch(ENDPOINTS.MATCH, {
-            method: 'POST',
-            body: jdFormData,
-        });
-        const jdJson = await jdRes.json();
-        if (jdRes.ok && jdJson.success) {
-            jdData = jdJson;
-        }
-    } catch (e) {
-        console.warn('JD match failed, continuing with ATS data:', e);
+    // Build result from ATS data first (primary score source)
+    let result: AnalysisResult;
+
+    if (atsData) {
+        result = transformATSResponse(atsData, uploadData);
+    } else if (jdData) {
+        result = transformJDMatchResponse(jdData, uploadData);
+    } else {
+        throw new Error('No analysis results were returned');
     }
-
-    // Step 4: Build the final result by combining all data
-    const result = transformATSResponse(atsData, uploadData);
 
     // Enrich with JD match data if available
     if (jdData) {
         result.skills = transformSkillsBreakdown(jdData.skills_breakdown);
         result.recruiterReadability = Math.round(jdData.component_scores?.semantic || result.recruiterReadability);
 
-        // Use JD match's keyword analysis (much better than ATS scorer's)
         if (jdData.missing_keywords) {
             result.missingKeywords = {
                 critical: jdData.missing_keywords.critical || [],
@@ -331,12 +309,12 @@ export async function analyzeResume(
                 { area: 'Keywords', score: Math.round(jdData.component_scores.keyword || 0) },
                 { area: 'Skills', score: Math.round(jdData.component_scores.skills || 0) },
                 { area: 'Context', score: Math.round(jdData.component_scores.context || 0) },
-                { area: 'Achievement', score: atsData.sub_scores?.achievement || 0 },
-                { area: 'Formatting', score: 100 - (atsData.sub_scores?.formatting_penalty || 0) },
+                { area: 'Achievement', score: atsData?.sub_scores?.achievement || 0 },
+                { area: 'Formatting', score: 100 - (atsData?.sub_scores?.formatting_penalty || 0) },
             ];
         }
 
-        // Merge suggestions
+        // Merge JD suggestions
         const jdSuggestions = transformJDMatchResponse(jdData, uploadData).suggestions;
         const existingTitles = new Set(result.suggestions.map(s => s.title));
         for (const s of jdSuggestions) {

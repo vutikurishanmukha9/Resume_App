@@ -2,8 +2,10 @@
 Text Processing Utilities for AI Resume Analyzer
 
 Handles file validation, PDF/TXT text extraction, and temporary file management.
+Supports both file-path and in-memory (BytesIO) extraction.
 """
 
+import io
 import os
 import logging
 import pdfplumber
@@ -12,6 +14,8 @@ from contextlib import contextmanager
 from backend.config import MAX_TEXT_LENGTH, MAX_PDF_PAGES, MIN_TEXT_LENGTH, ALLOWED_EXTENSIONS
 
 logger = logging.getLogger(__name__)
+
+MAX_UPLOAD_BYTES = 16 * 1024 * 1024  # 16 MB hard limit
 
 
 @contextmanager
@@ -33,50 +37,44 @@ def allowed_file(filename: str) -> bool:
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-MAX_UPLOAD_BYTES = 16 * 1024 * 1024  # 16 MB hard limit
-
-
-async def save_upload_safely(upload_file, dest_path: str) -> None:
+async def read_upload_bytes(upload_file) -> bytes:
     """
-    Save an uploaded file to disk in chunks with a hard size limit.
-    
-    Reads in 8 KB chunks and aborts immediately if the file exceeds
-    MAX_UPLOAD_BYTES.  This prevents OOM when many users upload
-    large PDFs concurrently.
-    
-    Raises:
-        ValueError: if the file exceeds the size limit.
+    Read an uploaded file into memory in chunks with a hard size limit.
+
+    Returns the raw bytes.  Raises ValueError if the file exceeds
+    MAX_UPLOAD_BYTES.
     """
+    chunks: list[bytes] = []
+    total = 0
     chunk_size = 8 * 1024  # 8 KB
-    bytes_written = 0
-    with open(dest_path, 'wb') as f:
-        while True:
-            chunk = await upload_file.read(chunk_size)
-            if not chunk:
-                break
-            bytes_written += len(chunk)
-            if bytes_written > MAX_UPLOAD_BYTES:
-                # Clean up the partial file
-                f.close()
-                try:
-                    os.remove(dest_path)
-                except OSError:
-                    pass
-                raise ValueError(
-                    f'File too large ({bytes_written // (1024*1024)}+ MB). '
-                    f'Maximum allowed size is {MAX_UPLOAD_BYTES // (1024*1024)} MB.'
-                )
-            f.write(chunk)
+
+    while True:
+        chunk = await upload_file.read(chunk_size)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise ValueError(
+                f'File too large ({total // (1024*1024)}+ MB). '
+                f'Maximum allowed size is {MAX_UPLOAD_BYTES // (1024*1024)} MB.'
+            )
+        chunks.append(chunk)
+
+    return b''.join(chunks)
 
 
-def extract_text_from_pdf(file_path: str) -> str:
+# ─── PDF extraction ───────────────────────────────────────────────
+
+def _extract_pdf_text(source) -> str:
     """
-    Extract text from PDF file using pdfplumber.
-    Handles multi-column layouts and complex formatting better than PyPDF2.
+    Extract text from a PDF.
+
+    *source* can be a file path (str) **or** a BytesIO / file-like object.
+    pdfplumber.open() accepts both transparently.
     """
     try:
         text = ""
-        with pdfplumber.open(file_path) as pdf:
+        with pdfplumber.open(source) as pdf:
             num_pages = min(len(pdf.pages), MAX_PDF_PAGES)
 
             for i in range(num_pages):
@@ -95,32 +93,69 @@ def extract_text_from_pdf(file_path: str) -> str:
         extracted = text.strip()[:MAX_TEXT_LENGTH]
 
         if len(extracted) < MIN_TEXT_LENGTH:
-            raise ValueError("Insufficient text extracted from PDF. Please ensure the PDF contains readable text.")
-
+            raise ValueError(
+                "Insufficient text extracted from PDF. "
+                "Please ensure the PDF contains readable text."
+            )
         return extracted
 
+    except ValueError:
+        raise
     except Exception as e:
-        if "Insufficient text" in str(e):
-            raise
         raise ValueError(f"Failed to process PDF: {str(e)}")
 
 
-def extract_text_from_file(file_path: str, filename: str) -> str:
-    """Extract text from PDF or TXT file with validation"""
+# ─── Public API ───────────────────────────────────────────────────
+
+def extract_text_from_bytes(data: bytes, filename: str) -> str:
+    """
+    Extract text from raw file bytes (no disk I/O).
+
+    Accepts the file content as *bytes* and the original *filename*
+    (used only to determine the extension).
+    """
     ext = filename.rsplit('.', 1)[-1].lower()
-    
-    try:
-        if ext == 'pdf':
-            return extract_text_from_pdf(file_path)
-        elif ext == 'txt':
+
+    if ext == 'pdf':
+        return _extract_pdf_text(io.BytesIO(data))
+    elif ext == 'txt':
+        content = data.decode('utf-8', errors='ignore').strip()[:MAX_TEXT_LENGTH]
+        if len(content) < MIN_TEXT_LENGTH:
+            raise ValueError(
+                "Text file is too short. "
+                "Please provide a resume with at least 50 characters."
+            )
+        return content
+    else:
+        raise ValueError("Unsupported file type")
+
+
+def extract_text_from_pdf(file_path: str) -> str:
+    """Legacy wrapper — extracts text from a PDF file on disk."""
+    return _extract_pdf_text(file_path)
+
+
+def extract_text_from_file(file_path: str, filename: str) -> str:
+    """Legacy wrapper — extracts text from a file on disk."""
+    ext = filename.rsplit('.', 1)[-1].lower()
+
+    if ext == 'pdf':
+        return extract_text_from_pdf(file_path)
+    elif ext == 'txt':
+        try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read().strip()[:MAX_TEXT_LENGTH]
-                
-            if len(content) < MIN_TEXT_LENGTH:
-                raise ValueError("Text file is too short. Please provide a resume with at least 50 characters.")
-            
-            return content
-        else:
-            raise ValueError("Unsupported file type")
-    except UnicodeDecodeError:
-        raise ValueError("Failed to read text file. Please ensure it's a valid UTF-8 encoded text file.")
+        except UnicodeDecodeError:
+            raise ValueError(
+                "Failed to read text file. "
+                "Please ensure it's a valid UTF-8 encoded text file."
+            )
+
+        if len(content) < MIN_TEXT_LENGTH:
+            raise ValueError(
+                "Text file is too short. "
+                "Please provide a resume with at least 50 characters."
+            )
+        return content
+    else:
+        raise ValueError("Unsupported file type")

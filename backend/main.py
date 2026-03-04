@@ -21,7 +21,7 @@ from backend.config import BASE_DIR, FRONTEND_DIR, UPLOAD_FOLDER
 from backend.exceptions import ResumeAnalyzerError
 from backend.services.model_manager import load_models_background
 from backend.rate_limiter import limiter, rate_limiting_enabled
-from backend.routes import general_router, upload_router, match_router, ats_router
+from backend.routes import general_router, upload_router, match_router, ats_router, analyze_router
 
 # -------------------- LOGGING --------------------
 logging.basicConfig(
@@ -89,6 +89,7 @@ app.include_router(general_router)
 app.include_router(upload_router)
 app.include_router(match_router)
 app.include_router(ats_router)
+app.include_router(analyze_router)
 
 
 # -------------------- REACT FRONTEND (Production) --------------------
