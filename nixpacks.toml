@@ -1,11 +1,15 @@
-# Nixpacks configuration for Railway
+# Nixpacks configuration for Railway (non-Docker fallback)
 # https://nixpacks.com/docs/configuration/file
 
 [phases.setup]
-nixPkgs = ["python310Full", "gcc", "stdenv.cc.cc.lib"]
+nixPkgs = ["python310Full", "gcc", "stdenv.cc.cc.lib", "nodejs-18_x"]
 
 [phases.install]
-cmds = ["python -m pip install --upgrade pip", "python -m pip install --no-cache-dir -r requirements.txt"]
+cmds = [
+    "python -m pip install --upgrade pip",
+    "python -m pip install --no-cache-dir -r requirements.txt",
+    "cd frontend && npm ci && npm run build && cd .."
+]
 
 [start]
 cmd = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 300 --log-level info"

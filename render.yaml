@@ -8,7 +8,9 @@ services:
     dockerfilePath: Dockerfile
     envVars:
       - key: PORT
-        generateValue: true
+        value: "10000"
+      - key: PYTHONUNBUFFERED
+        value: "1"
     healthCheckPath: /health
     autoDeploy: true
     plan: free
