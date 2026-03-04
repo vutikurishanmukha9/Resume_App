@@ -9,7 +9,6 @@ In production, it also serves the React frontend build.
 import os
 import sys
 import logging
-import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -41,14 +40,12 @@ logger.info("=" * 60)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan - handles startup and shutdown events"""
-    # Startup
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    logger.info(f"Upload folder created: {UPLOAD_FOLDER}")
-
-    logger.info("Launching model loading thread...")
-    model_thread = threading.Thread(target=load_models_background, daemon=True)
-    model_thread.start()
-    logger.info("Model loading thread started")
+    # Startup: load models synchronously so the server is fully ready
+    # before accepting traffic.  Container health checks should use
+    # /ready (not /health) to gate traffic until this completes.
+    logger.info("Loading ML models (server will accept requests after this)...")
+    load_models_background()
+    logger.info("All models loaded — server ready")
 
     yield
 

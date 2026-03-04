@@ -51,7 +51,7 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
                 job_title = model_manager.job_df.iloc[idx]['Job Title']
                 score = float(cosine_scores[0][idx])
                 matches.append((job_title, score))
-            except Exception as e:
+            except (IndexError, KeyError) as e:
                 logger.warning(f"Failed to process match at index {idx}: {e}")
                 continue
 
@@ -59,11 +59,12 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
         features = extract_resume_features(resume_text)
         
         # Create feature vector for salary model
+        # Pass raw features — the model learns the weights, not us
         feature_vector = np.array([[
-            features['years_experience'] * 2 +  # Weight experience heavily
-            features['education_level'] * 3 +   # Weight education
-            features['seniority_level'] * 2.5 + # Weight seniority
-            features['skills_count'] * 0.5      # Weight skills count
+            features['years_experience'],
+            features['education_level'],
+            features['seniority_level'],
+            features['skills_count'],
         ]])
         
         # Predict salary using extracted features
@@ -83,8 +84,13 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
         
         return predicted_job, matches, predicted_salary, salary_details
         
-    except Exception as e:
+    except ValueError:
+        raise
+    except (KeyError, IndexError, RuntimeError) as e:
         logger.error(f"Resume analysis failed: {e}")
+        raise ValueError(f"Failed to analyze resume: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error in resume analysis: {e}")
         raise ValueError(f"Failed to analyze resume: {str(e)}")
 
 
@@ -118,13 +124,20 @@ def calculate_jd_resume_match(resume_text: str, jd_text: str) -> Tuple[float, Di
         )
         raw_semantic = util.cos_sim(resume_embedding, jd_embedding).item()
         
-        # Calibrate semantic score: raw scores typically range 0.3-0.7
+        # Calibrate semantic score.
+        # Raw cosine similarity for all-MiniLM-L6-v2 typically ranges:
+        #   0.0–0.2  = unrelated texts
+        #   0.2–0.3  = loosely related
+        #   0.3–0.5  = moderately related
+        #   0.5–0.7  = closely related
+        #   0.7+     = near-identical meaning
+        # We map this to a 0–100 user-facing score.
         if raw_semantic < 0.2:
-            semantic_score = raw_semantic * 100
+            semantic_score = raw_semantic * 100           # 0–20 → 0–20
         elif raw_semantic < 0.3:
-            semantic_score = 30 + (raw_semantic - 0.2) * 200
+            semantic_score = 30 + (raw_semantic - 0.2) * 200   # 0.2–0.3 → 30–50
         else:
-            semantic_score = min(98, 50 + (raw_semantic - 0.3) * 112.5)
+            semantic_score = min(98, 50 + (raw_semantic - 0.3) * 112.5)  # 0.3+ → 50–98
         
         component_scores['semantic'] = semantic_score
         
@@ -224,6 +237,11 @@ def calculate_jd_resume_match(resume_text: str, jd_text: str) -> Tuple[float, Di
         
         return final_score, detailed_results
         
-    except Exception as e:
+    except ValueError:
+        raise
+    except (KeyError, IndexError, RuntimeError) as e:
         logger.error(f"JD matching failed: {e}")
+        raise ValueError(f"Failed to calculate match: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error in JD matching: {e}")
         raise ValueError(f"Failed to calculate match: {str(e)}")
