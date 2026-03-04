@@ -462,12 +462,573 @@
           "context": 39.38
         }
       }
+    },
+    {
+      "timestamp": "2026-03-03T17:08:00.230706",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711152,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T17:08:02.415138",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 44,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 6,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T17:08:06.704027",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.97,
+        "component_scores": {
+          "semantic": 82.77,
+          "keyword": 38.73,
+          "skills": 61.54,
+          "context": 39.38
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:49:27.140862",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711385,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:49:29.803913",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 3,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:49:32.060803",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 39.57,
+        "component_scores": {
+          "semantic": 60.73,
+          "keyword": 39.9,
+          "skills": 0.0,
+          "context": 33.04
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:19.295862",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711385,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:20.446708",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:23.452053",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 58.67,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 48.03,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:37.450411",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 711385,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:38.408749",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:54:41.044365",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 58.67,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 48.03,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:58:43.593299",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:58:45.106348",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T20:58:46.158053",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 58.67,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 48.03,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:15.404204",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:16.314813",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:17.934192",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 58.67,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 48.03,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:53.862723",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:54.926626",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:03:58.278074",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 58.67,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 48.03,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:09:04.440680",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:09:06.042695",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 43,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 4,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:09:07.577234",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 60.79,
+        "component_scores": {
+          "semantic": 62.03,
+          "keyword": 55.09,
+          "skills": 80.0,
+          "context": 34.52
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:11:39.775634",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:11:41.208009",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 45,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 9,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:11:44.345486",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 94.91,
+        "component_scores": {
+          "semantic": 98,
+          "keyword": 100,
+          "skills": 100.0,
+          "context": 57.07
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:17:10.983944",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 707087,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:17:12.102821",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 45,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 9,
+          "title_match": 80,
+          "experience": 80,
+          "achievement": 75,
+          "education": 75,
+          "formatting_penalty": 18
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:17:14.333661",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 94.91,
+        "component_scores": {
+          "semantic": 98,
+          "keyword": 100,
+          "skills": 100.0,
+          "context": 57.07
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:18:05.703181",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 704183,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:18:12.172446",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 30,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 8,
+          "title_match": 20,
+          "experience": 80,
+          "achievement": 75,
+          "education": 50,
+          "formatting_penalty": 15
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:18:16.377616",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 82.82,
+        "component_scores": {
+          "semantic": 88.68,
+          "keyword": 93.57,
+          "skills": 74.07,
+          "context": 44.57
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:28:40.872734",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 704183,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:28:43.725493",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 31,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 9,
+          "title_match": 20,
+          "experience": 80,
+          "achievement": 75,
+          "education": 50,
+          "formatting_penalty": 15
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T21:28:48.960272",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 83.67,
+        "component_scores": {
+          "semantic": 88.68,
+          "keyword": 96.43,
+          "skills": 74.07,
+          "context": 44.57
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T22:24:30.623236",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 704183,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T22:24:31.435687",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 31,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 9,
+          "title_match": 20,
+          "experience": 80,
+          "achievement": 75,
+          "education": 50,
+          "formatting_penalty": 15
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T22:24:33.134481",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 83.67,
+        "component_scores": {
+          "semantic": 88.68,
+          "keyword": 96.43,
+          "skills": 74.07,
+          "context": 44.57
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T22:58:45.869614",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 31,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 10,
+          "title_match": 20,
+          "experience": 80,
+          "achievement": 75,
+          "education": 50,
+          "formatting_penalty": 15
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T22:58:46.914017",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 84.54,
+        "component_scores": {
+          "semantic": 88.68,
+          "keyword": 99.32,
+          "skills": 74.07,
+          "context": 44.57
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T23:03:04.032210",
+      "type": "upload",
+      "data": {
+        "predicted_job": "Cloud Engineer",
+        "salary": 704183,
+        "confidence": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-03-03T23:03:05.815215",
+      "type": "ats_score",
+      "data": {
+        "ats_score": 31,
+        "mode": "deep",
+        "sub_scores": {
+          "skill_match": 10,
+          "title_match": 20,
+          "experience": 80,
+          "achievement": 75,
+          "education": 50,
+          "formatting_penalty": 15
+        }
+      }
+    },
+    {
+      "timestamp": "2026-03-03T23:03:10.711679",
+      "type": "jd_match",
+      "data": {
+        "match_percentage": 84.54,
+        "component_scores": {
+          "semantic": 88.68,
+          "keyword": 99.32,
+          "skills": 74.07,
+          "context": 44.57
+        }
+      }
     }
   ],
   "summary": {
-    "total_uploads": 16,
-    "total_matches": 14,
-    "avg_match_score": 51.54785714285714,
-    "last_updated": "2026-03-03T16:36:31.295002"
+    "total_uploads": 30,
+    "total_matches": 29,
+    "avg_match_score": 61.56586206896552,
+    "last_updated": "2026-03-03T23:03:10.711679"
   }
 }

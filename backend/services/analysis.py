@@ -1,3 +1,4 @@
+import re
 import logging
 import numpy as np
 from typing import Tuple, List, Dict, Any
@@ -5,6 +6,7 @@ from sentence_transformers import util
 
 from backend.config import MIN_TEXT_LENGTH, TOP_MATCHES, MATCHING_WEIGHTS, MAX_TEXT_LENGTH
 from backend.services.model_manager import model_manager
+from backend.exceptions import AnalysisError, TextExtractionError
 from backend.utils.keyword_extractor import (
     extract_keywords,
     calculate_keyword_overlap,
@@ -19,6 +21,75 @@ from backend.utils.skill_extractor import (
 from backend.utils.feature_extractor import extract_resume_features
 
 logger = logging.getLogger(__name__)
+
+
+# ── Salary adjustment by job role ─────────────────────────────────
+# The salary model was trained on generic features.  This table
+# applies a role-specific multiplier so that a Software Engineer
+# and a Retail Manager with the same features get different salaries.
+JOB_SALARY_MULTIPLIER = {
+    'data science':    1.15,
+    'software':        1.10,
+    'web development': 1.05,
+    'devops':          1.12,
+    'cloud':           1.12,
+    'cybersecurity':   1.10,
+    'database':        1.05,
+    'network':         1.00,
+    'project manager': 1.00,
+    'business analyst':1.00,
+    'hr':              0.85,
+    'sales':           0.90,
+    'marketing':       0.90,
+    'finance':         1.05,
+    'healthcare':      0.95,
+    'education':       0.80,
+    'design':          0.95,
+    'mechanical':      1.00,
+    'electrical':      1.05,
+    'civil':           0.95,
+}
+
+
+def _get_salary_multiplier(job_title: str) -> float:
+    """Return a salary multiplier for the predicted job category."""
+    title_lower = job_title.lower()
+    for key, mult in JOB_SALARY_MULTIPLIER.items():
+        if key in title_lower:
+            return mult
+    return 1.0  # default: no adjustment
+
+
+# ── Contact / header line detector ────────────────────────────────
+_CONTACT_PATTERNS = re.compile(
+    r'(?:'
+    r'[\w.+-]+@[\w-]+\.[\w.]+|'         # email
+    r'\+?\d[\d\s\-()]{7,}|'              # phone
+    r'linkedin\.com|github\.com|'        # profile URLs
+    r'\b(?:address|phone|email|mobile|contact)\b'
+    r')',
+    re.IGNORECASE
+)
+
+_HEADER_PHRASES = {
+    'about the company', 'about us', 'who we are',
+    'equal opportunity', 'we are committed', 'our mission',
+    'company overview', 'job summary', 'position overview',
+}
+
+
+def _is_substantive_sentence(sentence: str) -> bool:
+    """Return True if the sentence contains real content, not contact info or headers."""
+    s = sentence.strip()
+    if len(s) < 30:  # too short to be meaningful
+        return False
+    if _CONTACT_PATTERNS.search(s):
+        return False
+    s_lower = s.lower()
+    for phrase in _HEADER_PHRASES:
+        if phrase in s_lower:
+            return False
+    return True
 
 
 def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], float, Dict[str, Any]]:
@@ -67,11 +138,15 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
             features['skills_count'],
         ]])
         
-        # Predict salary using extracted features
-        predicted_salary = float(model_manager.salary_model.predict(feature_vector)[0])
+        # Predict base salary, then adjust by job role
+        base_salary = float(model_manager.salary_model.predict(feature_vector)[0])
+        role_multiplier = _get_salary_multiplier(predicted_job)
+        predicted_salary = base_salary * role_multiplier
         
         # Prepare salary details for response
         salary_details = {
+            'predicted_job': predicted_job,
+            'role_multiplier': role_multiplier,
             'features': {
                 'years_experience': features['years_experience'],
                 'education_level': features['education_level'],
@@ -79,7 +154,7 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
                 'skills_count': features['skills_count']
             },
             'confidence': round(features['completeness'], 2),
-            'note': 'Salary prediction based on extracted resume features. Confidence indicates feature completeness.'
+            'note': 'Salary adjusted for predicted job role. Confidence indicates feature completeness.'
         }
         
         return predicted_job, matches, predicted_salary, salary_details
@@ -88,10 +163,10 @@ def analyze_resume(resume_text: str) -> Tuple[str, List[Tuple[str, float]], floa
         raise
     except (KeyError, IndexError, RuntimeError) as e:
         logger.error(f"Resume analysis failed: {e}")
-        raise ValueError(f"Failed to analyze resume: {str(e)}")
+        raise AnalysisError(f"Failed to analyze resume: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error in resume analysis: {e}")
-        raise ValueError(f"Failed to analyze resume: {str(e)}")
+        raise AnalysisError(f"Failed to analyze resume: {str(e)}")
 
 
 def calculate_jd_resume_match(resume_text: str, jd_text: str) -> Tuple[float, Dict[str, Any]]:
@@ -194,8 +269,17 @@ def calculate_jd_resume_match(resume_text: str, jd_text: str) -> Tuple[float, Di
         }
         
         # 4. CONTEXTUAL SIMILARITY (10% weight)
-        resume_sentences = split_into_sentences(resume_text)[:10]
-        jd_sentences = split_into_sentences(jd_text)[:10]
+        # Filter out contact info, headers, and very short lines
+        # so we compare actual experience/skills content, not
+        # "John Doe" vs "About Our Company".
+        resume_sentences = [
+            s for s in split_into_sentences(resume_text)
+            if _is_substantive_sentence(s)
+        ][:12]
+        jd_sentences = [
+            s for s in split_into_sentences(jd_text)
+            if _is_substantive_sentence(s)
+        ][:12]
         
         if resume_sentences and jd_sentences:
             resume_sent_embeds = model_manager.embed_model.encode(
@@ -241,7 +325,7 @@ def calculate_jd_resume_match(resume_text: str, jd_text: str) -> Tuple[float, Di
         raise
     except (KeyError, IndexError, RuntimeError) as e:
         logger.error(f"JD matching failed: {e}")
-        raise ValueError(f"Failed to calculate match: {str(e)}")
+        raise AnalysisError(f"Failed to calculate match: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error in JD matching: {e}")
-        raise ValueError(f"Failed to calculate match: {str(e)}")
+        raise AnalysisError(f"Failed to calculate match: {str(e)}")

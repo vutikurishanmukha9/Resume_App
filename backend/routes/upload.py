@@ -74,11 +74,4 @@ async def upload_resume(request: Request, resume: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Upload error: {e}")
         logger.error(traceback.format_exc())
-        error_msg = str(e).lower()
-        if 'pdf' in error_msg or 'extract' in error_msg or 'parse' in error_msg:
-            detail = 'Failed to parse the resume file. Please ensure it is a valid, non-corrupted PDF or TXT file.'
-        elif 'encode' in error_msg or 'model' in error_msg or 'embed' in error_msg:
-            detail = 'The analysis engine encountered an error. Please try again in a moment.'
-        else:
-            detail = 'An unexpected error occurred. Please try again.'
-        raise HTTPException(status_code=500, detail=detail)
+        raise HTTPException(status_code=500, detail='An unexpected error occurred. Please try again.')

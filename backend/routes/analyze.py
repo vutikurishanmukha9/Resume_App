@@ -1,10 +1,3 @@
-"""
-Unified Analysis Route for AI Resume Analyzer
-
-Single endpoint that parses the resume ONCE and runs all scoring
-functions in memory. Replaces the 3-call pattern (upload + ats + match).
-"""
-
 import logging
 import traceback
 from typing import Optional
