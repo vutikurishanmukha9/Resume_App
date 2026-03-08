@@ -1,15 +1,12 @@
 """
 Text Processing Utilities for AI Resume Analyzer
 
-Handles file validation, PDF/TXT text extraction, and temporary file management.
-Supports both file-path and in-memory (BytesIO) extraction.
+Handles file validation, PDF/TXT text extraction via in-memory BytesIO.
 """
 
 import io
-import os
 import logging
 import pdfplumber
-from contextlib import contextmanager
 
 from backend.config import MAX_TEXT_LENGTH, MAX_PDF_PAGES, MIN_TEXT_LENGTH, ALLOWED_EXTENSIONS
 
@@ -18,17 +15,7 @@ logger = logging.getLogger(__name__)
 MAX_UPLOAD_BYTES = 16 * 1024 * 1024  # 16 MB hard limit
 
 
-@contextmanager
-def temporary_file(file_path):
-    """Temporary file cleanup context manager"""
-    try:
-        yield file_path
-    finally:
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except Exception as e:
-            logger.warning(f"Failed to delete temporary file {file_path}: {e}")
+
 
 
 def allowed_file(filename: str) -> bool:
@@ -76,6 +63,11 @@ def _extract_pdf_text(source) -> str:
         text = ""
         with pdfplumber.open(source) as pdf:
             num_pages = min(len(pdf.pages), MAX_PDF_PAGES)
+            if len(pdf.pages) > MAX_PDF_PAGES:
+                logger.warning(
+                    f"PDF has {len(pdf.pages)} pages, only processing first {MAX_PDF_PAGES}. "
+                    f"Some content may be missed."
+                )
 
             for i in range(num_pages):
                 try:
@@ -130,32 +122,3 @@ def extract_text_from_bytes(data: bytes, filename: str) -> str:
         raise ValueError("Unsupported file type")
 
 
-def extract_text_from_pdf(file_path: str) -> str:
-    """Legacy wrapper — extracts text from a PDF file on disk."""
-    return _extract_pdf_text(file_path)
-
-
-def extract_text_from_file(file_path: str, filename: str) -> str:
-    """Legacy wrapper — extracts text from a file on disk."""
-    ext = filename.rsplit('.', 1)[-1].lower()
-
-    if ext == 'pdf':
-        return extract_text_from_pdf(file_path)
-    elif ext == 'txt':
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read().strip()[:MAX_TEXT_LENGTH]
-        except UnicodeDecodeError:
-            raise ValueError(
-                "Failed to read text file. "
-                "Please ensure it's a valid UTF-8 encoded text file."
-            )
-
-        if len(content) < MIN_TEXT_LENGTH:
-            raise ValueError(
-                "Text file is too short. "
-                "Please provide a resume with at least 50 characters."
-            )
-        return content
-    else:
-        raise ValueError("Unsupported file type")

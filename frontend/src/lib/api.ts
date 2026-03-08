@@ -77,6 +77,14 @@ interface ATSResponse {
         optional?: string[];
     };
     achievements_found: string[];
+    experience_details?: {
+        total_years: number;
+        skill_years: Record<string, number>;
+        recency?: string;
+    };
+    sections_detected?: string[];
+    stuffing_detected?: boolean;
+    required_gate_applied?: boolean;
     suggestions: string[];
     error?: string;
 }
@@ -162,7 +170,9 @@ function transformATSResponse(atsData: ATSResponse, uploadData?: UploadResponse)
         predictedTitle: uploadData?.predicted_job || atsData.interpretation?.badge || 'N/A',
         experience: uploadData?.salary_details?.features
             ? getExperienceLabel(uploadData.salary_details.features.years_experience)
-            : `${subScores.experience || 0}% match`,
+            : atsData.experience_details?.total_years
+                ? `${atsData.experience_details.total_years}+ years`
+                : `${subScores.experience || 0}% match`,
         education: uploadData?.salary_details?.features
             ? getEducationLabel(uploadData.salary_details.features.education_level)
             : `${subScores.education || 0}% match`,
@@ -188,7 +198,10 @@ function transformATSResponse(atsData: ATSResponse, uploadData?: UploadResponse)
             { area: 'Achievement', score: subScores.achievement || 0 },
             { area: 'Education', score: subScores.education || 0 },
             { area: 'Formatting', score: 100 - (subScores.formatting_penalty || 0) },
+            ...(subScores.recency_bonus ? [{ area: 'Recency', score: Math.max(0, 100 + subScores.recency_bonus) }] : []),
         ],
+        stuffingDetected: atsData.stuffing_detected,
+        requiredGateApplied: atsData.required_gate_applied,
     };
 }
 

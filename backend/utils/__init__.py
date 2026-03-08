@@ -6,10 +6,9 @@ and feature extraction utilities.
 """
 
 from backend.utils.text_processing import (
-    temporary_file,
     allowed_file,
-    extract_text_from_pdf,
-    extract_text_from_file
+    read_upload_bytes,
+    extract_text_from_bytes,
 )
 from backend.utils.keyword_extractor import (
     extract_keywords,

@@ -9,6 +9,7 @@ import traceback
 from fastapi import APIRouter, UploadFile, File, Form, Request, HTTPException
 from starlette.concurrency import run_in_threadpool
 
+from backend.config import MAX_JD_LENGTH
 from backend.services.model_manager import model_manager
 from backend.services.analysis import calculate_jd_resume_match
 from backend.services.analytics import track_analysis
@@ -25,7 +26,6 @@ router = APIRouter()
 
 
 @router.post("/match_jd_resume")
-@limiter.limit("10/minute") if rate_limiting_enabled else lambda f: f
 async def match_jd_resume(
     request: Request,
     resume: UploadFile = File(...),
@@ -40,6 +40,11 @@ async def match_jd_resume(
 
         if not jd_text:
             raise HTTPException(status_code=400, detail='Please provide a job description')
+        if len(jd_text) > MAX_JD_LENGTH:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Job description too long ({len(jd_text)} chars). Maximum is {MAX_JD_LENGTH}.'
+            )
 
         if not resume or not resume.filename:
             raise HTTPException(status_code=400, detail='Please upload a resume file')

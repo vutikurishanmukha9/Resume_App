@@ -9,9 +9,8 @@ import traceback
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, Request, HTTPException
 from starlette.concurrency import run_in_threadpool
-from sentence_transformers import util
 
-from backend.config import MAX_TEXT_LENGTH
+from backend.config import MAX_TEXT_LENGTH, MAX_JD_LENGTH
 from backend.services.model_manager import model_manager
 from backend.services.ats_scorer import ATSScorer
 from backend.services.analytics import track_analysis
@@ -35,6 +34,8 @@ def _calculate_ats(resume_text, jd_text, jd_title, mode, required_years,
     semantic_similarity = None
     if mode == 'deep' and model_manager.embed_model:
         try:
+            from sentence_transformers import util
+
             resume_embedding = model_manager.embed_model.encode(
                 resume_text[:MAX_TEXT_LENGTH], convert_to_tensor=True
             )
@@ -59,7 +60,6 @@ def _calculate_ats(resume_text, jd_text, jd_title, mode, required_years,
 
 
 @router.post("/ats_score")
-@limiter.limit("10/minute") if rate_limiting_enabled else lambda f: f
 async def calculate_ats_score(
     request: Request,
     resume: UploadFile = File(...),
@@ -82,6 +82,11 @@ async def calculate_ats_score(
 
         if not jd_text:
             raise HTTPException(status_code=400, detail='Please provide a job description')
+        if len(jd_text) > MAX_JD_LENGTH:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Job description too long ({len(jd_text)} chars). Maximum is {MAX_JD_LENGTH}.'
+            )
 
         if not resume or not resume.filename:
             raise HTTPException(status_code=400, detail='Please upload a resume file')

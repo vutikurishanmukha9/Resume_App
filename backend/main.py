@@ -8,9 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 
-from backend.config import BASE_DIR, FRONTEND_DIR, UPLOAD_FOLDER
+from backend.config import BASE_DIR, FRONTEND_DIR
 from backend.exceptions import ResumeAnalyzerError
-from backend.services.model_manager import load_models_background
+from backend.services.model_manager import load_all_models
 from backend.rate_limiter import limiter, rate_limiting_enabled
 from backend.routes import general_router, upload_router, match_router, ats_router, analyze_router
 
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     # before accepting traffic.  Container health checks should use
     # /ready (not /health) to gate traffic until this completes.
     logger.info("Loading ML models (server will accept requests after this)...")
-    load_models_background()
+    load_all_models()
     logger.info("All models loaded — server ready")
 
     yield
@@ -55,9 +55,15 @@ app = FastAPI(
 
 # -------------------- MIDDLEWARE --------------------
 # CORS for split deployment (React frontend + FastAPI backend)
+# Use ALLOWED_ORIGINS env var in production; defaults to dev origins.
+_allowed_origins = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://localhost:8000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _allowed_origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

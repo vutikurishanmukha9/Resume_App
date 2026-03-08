@@ -12,9 +12,9 @@ MODELS_DIR = BASE_DIR / "models"
 DATA_DIR = BASE_DIR / "data"
 
 # App config
-UPLOAD_FOLDER = str(BASE_DIR / "uploads")
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
+CURRENCY_SYMBOL = os.environ.get('CURRENCY_SYMBOL', '₹')  # Configurable via env
 
 # Model files
 JOB_CLASSIFIER_PATH = MODELS_DIR / "job_classifier.pkl"
@@ -30,7 +30,8 @@ SKILLS_TAXONOMY_PATH = DATA_DIR / "skills_taxonomy.json"
 
 # Constants
 MAX_TEXT_LENGTH = 5000
-MAX_PDF_PAGES = 5
+MAX_JD_LENGTH = 10000          # Max chars for job description input
+MAX_PDF_PAGES = 10             # 10 pages covers most CVs including academic
 TOP_MATCHES = 3
 MIN_TEXT_LENGTH = 50
 

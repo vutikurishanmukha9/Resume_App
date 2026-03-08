@@ -161,64 +161,28 @@ def extract_years_of_experience(text: str) -> float:
 def extract_education_level(text: str) -> int:
     """
     Extract education level from resume.
-    Returns: 0=Unknown, 1=Bachelor's, 2=Master's, 3=PhD
+    Returns: 0=Unknown, 1=Diploma, 2=Bachelor's, 3=Master's, 4=PhD
+    
+    Delegates to ats_helpers.detect_education_level() for single source of truth.
     """
-    text_lower = text.lower()
-    
-    # Check for PhD/Doctorate
-    phd_patterns = [r'\bph\.?d\b', r'\bdoctorate\b', r'\bdoctoral\b']
-    for pattern in phd_patterns:
-        if re.search(pattern, text_lower):
-            return 3
-    
-    # Check for Master's
-    masters_patterns = [r'\bmaster', r'\bm\.?s\.?\b', r'\bmba\b', r'\bm\.?tech\b', r'\bm\.?sc\b']
-    for pattern in masters_patterns:
-        if re.search(pattern, text_lower):
-            return 2
-    
-    # Check for Bachelor's
-    bachelors_patterns = [r'\bbachelor', r'\bb\.?s\.?\b', r'\bb\.?tech\b', r'\bb\.?sc\b', r'\bb\.?e\.?\b', r'\bundergraduate\b']
-    for pattern in bachelors_patterns:
-        if re.search(pattern, text_lower):
-            return 1
-    
-    return 0  # Unknown
+    from backend.services.ats_helpers import detect_education_level
+    result = detect_education_level(text)
+    return result.get('level_score', 0)
 
 
 def extract_seniority_level(text: str) -> int:
     """
     Extract job seniority level from resume.
     Returns: 0=Entry, 1=Mid, 2=Senior, 3=Lead/Principal
+    
+    Delegates to ats_helpers.detect_seniority_level() for single source of truth.
     """
-    text_lower = text.lower()
-    
-    # Check for Lead/Principal/Director level
-    lead_patterns = [r'\blead\b', r'\bprincipal\b', r'\bdirector\b', r'\bhead of\b', r'\bvp\b', r'\bchief\b']
-    for pattern in lead_patterns:
-        if re.search(pattern, text_lower):
-            return 3
-    
-    # Check for Senior level
-    senior_patterns = [r'\bsenior\b', r'\bsr\.?\b', r'\bstaff\b']
-    for pattern in senior_patterns:
-        if re.search(pattern, text_lower):
-            return 2
-    
-    # Check for Mid level
-    mid_patterns = [r'\bmid-level\b', r'\bintermediate\b', r'\bassociate\b']
-    for pattern in mid_patterns:
-        if re.search(pattern, text_lower):
-            return 1
-    
-    # Check for Junior/Entry level
-    junior_patterns = [r'\bjunior\b', r'\bjr\.?\b', r'\bentry\b', r'\bintern\b', r'\btrainee\b']
-    for pattern in junior_patterns:
-        if re.search(pattern, text_lower):
-            return 0
-    
-    # Default to mid-level if no clear indicator
-    return 1
+    from backend.services.ats_helpers import detect_seniority_level
+    result = detect_seniority_level(text)
+    level = result.get('level', 'unknown')
+    # Map level name to int
+    level_map = {'entry': 0, 'mid': 1, 'senior': 2, 'lead': 3}
+    return level_map.get(level, 0)  # Default entry-level, not mid (#17)
 
 
 def extract_resume_features(resume_text: str) -> Dict[str, Any]:
@@ -252,3 +216,4 @@ def extract_resume_features(resume_text: str) -> Dict[str, Any]:
     features['completeness'] = sum(completeness_factors) / len(completeness_factors)
     
     return features
+

@@ -1,9 +1,10 @@
 import logging
-import traceback
+import traceback as tb_mod
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, Request, HTTPException
 from starlette.concurrency import run_in_threadpool
 
+from backend.config import CURRENCY_SYMBOL, MAX_JD_LENGTH
 from backend.services.model_manager import model_manager
 from backend.services.analysis import analyze_resume, calculate_jd_resume_match
 from backend.services.ats_scorer import ATSScorer
@@ -44,11 +45,12 @@ def _run_full_analysis(
             'success': True,
             'predicted_job': predicted_job,
             'matches': [{'title': t, 'score': f"{s:.3f}"} for t, s in matches],
-            'salary': f"\u20b9{int(salary):,}",
+            'salary': f"{CURRENCY_SYMBOL}{int(salary):,}",
             'salary_details': salary_details,
         }
     except Exception as e:
         logger.warning(f"Upload analysis failed: {e}")
+        logger.debug(tb_mod.format_exc())
         results['upload'] = {'success': False, 'error': str(e)}
 
     # ── 2. JD Match (semantic + keyword + skills) ─────────────
@@ -64,6 +66,7 @@ def _run_full_analysis(
         }
     except Exception as e:
         logger.warning(f"JD match failed: {e}")
+        logger.debug(tb_mod.format_exc())
         results['jd_match'] = {'success': False, 'error': str(e)}
 
     # ── 3. ATS Score ──────────────────────────────────────────
@@ -102,6 +105,7 @@ def _run_full_analysis(
         results['ats'] = {'success': True, **ats_result}
     except Exception as e:
         logger.warning(f"ATS scoring failed: {e}")
+        logger.debug(tb_mod.format_exc())
         results['ats'] = {'success': False, 'error': str(e)}
 
     return results
@@ -138,6 +142,11 @@ async def analyze_full(
 
         if not jd_text:
             raise HTTPException(status_code=400, detail='Please provide a job description')
+        if len(jd_text) > MAX_JD_LENGTH:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Job description too long ({len(jd_text)} chars). Maximum is {MAX_JD_LENGTH}.'
+            )
 
         if not resume or not resume.filename:
             raise HTTPException(status_code=400, detail='Please upload a resume file')
@@ -184,5 +193,5 @@ async def analyze_full(
         )
     except Exception as e:
         logger.error(f"Analyze-full error: {e}")
-        logger.error(traceback.format_exc())
+        logger.error(tb_mod.format_exc())
         raise HTTPException(status_code=500, detail='Analysis failed. Please try again.')

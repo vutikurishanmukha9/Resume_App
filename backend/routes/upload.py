@@ -9,10 +9,10 @@ import traceback
 from fastapi import APIRouter, UploadFile, File, Request, HTTPException
 from starlette.concurrency import run_in_threadpool
 
+from backend.config import CURRENCY_SYMBOL
 from backend.services.model_manager import model_manager
 from backend.services.analysis import analyze_resume
 from backend.services.analytics import track_analysis
-from backend.rate_limiter import limiter, rate_limiting_enabled
 from backend.utils.text_processing import (
     allowed_file,
     read_upload_bytes,
@@ -25,7 +25,6 @@ router = APIRouter()
 
 
 @router.post("/upload")
-@limiter.limit("10/minute") if rate_limiting_enabled else lambda f: f
 async def upload_resume(request: Request, resume: UploadFile = File(...)):
     """Handle resume upload and analysis"""
     try:
@@ -57,7 +56,7 @@ async def upload_resume(request: Request, resume: UploadFile = File(...)):
             'success': True,
             'predicted_job': predicted_job,
             'matches': [{'title': t, 'score': f"{s:.3f}"} for t, s in matches],
-            'salary': f"\u20b9{int(salary):,}",
+            'salary': f"{CURRENCY_SYMBOL}{int(salary):,}",
             'salary_details': salary_details
         }
 

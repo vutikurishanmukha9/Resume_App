@@ -150,12 +150,21 @@ class ModelManager:
 model_manager = ModelManager()
 
 
-def load_models_background():
-    """Background thread to load models"""
+def load_all_models():
+    """Load all ML models synchronously during startup.
+    
+    Raises on failure so FastAPI's lifespan handler aborts
+    instead of starting a silently broken server.
+    """
     try:
-        logger.info("Starting background model loading...")
+        logger.info("Starting model loading...")
         model_manager.load_models()
         logger.info("All models loaded successfully!")
     except Exception as e:
-        logger.error(f"Background model loading failed: {e}")
+        logger.error(f"Model loading failed: {e}")
         logger.error(traceback.format_exc())
+        raise  # Let lifespan handler abort startup
+
+
+# Backward-compat alias
+load_models_background = load_all_models
