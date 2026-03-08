@@ -106,7 +106,9 @@ Resume_App/
 │   ├── services/
 │   │   ├── model_manager.py    # ML model loading (synchronous)
 │   │   ├── analysis.py         # Resume analysis, JD matching, salary prediction
-│   │   ├── ats_scorer.py       # ATS scoring engine (22 job categories)
+│   │   ├── ats_scorer.py       # ATSScorer class (quick + deep modes)
+│   │   ├── ats_constants.py    # Ontology, patterns, weights, thresholds
+│   │   ├── ats_helpers.py      # Detection, extraction, scoring helpers
 │   │   └── analytics.py        # Usage analytics
 │   ├── routes/
 │   │   ├── analyze.py          # /analyze-full — unified endpoint
